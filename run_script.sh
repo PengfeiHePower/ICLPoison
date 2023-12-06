@@ -11,7 +11,8 @@ mkdir -p $logs_dir
 
 echo "Starting $script_full_path"
 
-nohup python -u -m $script_full_path > $log_file 2>&1 &
+# CUDA_VISIBLE_DEVICES=$2 python -u -m $script_full_path > $log_file 2>&1 &
+python -u -m $script_full_path > $log_file 2>&1 &
 
 echo "Watch the log file with:"
 echo "wt $log_file"

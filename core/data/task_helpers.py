@@ -7,6 +7,7 @@ from core.data.tasks.token_operation_task import TokenOprationTask
 from core.data.tasks.mapping_task import MappingTask
 from core.data.tasks.translation_task import TranslationTask
 from core.data.tasks.task import Task
+from core.data.tasks.externel_task import ExternelTask
 
 from transformers import PreTrainedTokenizer
 
@@ -16,6 +17,7 @@ TASK_TYPE_TO_CLASS = {
     "token_operation": TokenOprationTask,
     "mapping": MappingTask,
     "translation": TranslationTask,
+    "externel": ExternelTask,
     # "sentiment": SentimentTask,
 }
 
@@ -137,6 +139,29 @@ ALL_TASKS = {
     #     "task_type": "sentiment",
     #     "task_kwargs": {"allow_prefix": True},
     # },
+    
+    # externel dataset
+    "ag_news":{
+        "task_type": "externel",
+        "task_kwargs": {"dataset_name": "ag_news"}
+    },
+    "glue-cola":{
+        "task_type": "externel",
+        "task_kwargs": {"dataset_name": "glue-cola"}
+    },
+    "emo":{
+        "task_type": "externel",
+        "task_kwargs": {"dataset_name": "emo"}
+    },
+    "poem_sentiment":{
+        "task_type": "externel",
+        "task_kwargs": {"dataset_name": "poem_sentiment"}
+    },
+    "glue-sst2":{
+        "task_type": "externel",
+        "task_kwargs": {"dataset_name": "glue-sst2"}
+    }
+    
 }
 
 

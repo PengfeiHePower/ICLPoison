@@ -23,16 +23,16 @@ TASKS_TO_EVALUATE = [
     "algorithmic_to_upper",
     "algorithmic_to_lower",
 ]
-
+# current on llama only
 MODELS_TO_EVALUATE = [
     # ("gpt-2", "1.5B"),
     ("pythia", "2.8B"),
-    ("llama", "7B"),
-    ("gpt-j", "6B"),
+    # ("llama", "7B"),
+    # ("gpt-j", "6B"), 
     ("pythia", "6.9B"),
-    ("llama", "13B"),
-    ("pythia", "12B"),
-    ("llama", "30B"),
+    # ("llama", "13B"),
+    # ("pythia", "12B"),
+    # ("llama", "30B"),
     # ("mpt", "7B"), # error in ForwardTracer
     # ("falcon", "7B"), # error in past_key_values
 ]

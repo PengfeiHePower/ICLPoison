@@ -5,11 +5,19 @@ load_dotenv(".env")
 
 import sys
 import os
+def limit_gpus(gpu_ids):
+    os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(map(str, gpu_ids))
+limit_gpus(range(1, 8)) # set GPUs used
+
 import pickle
 import time
 from typing import Optional
 
 from transformers import PreTrainedModel, PreTrainedTokenizer
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+icl_dir = os.path.dirname(os.path.dirname(current_dir))
+sys.path.append(icl_dir)
 
 from scripts.utils import MAIN_RESULTS_DIR, main_experiment_results_dir
 
@@ -18,8 +26,8 @@ from core.models.llm_loading import load_model_and_tokenizer
 from core.models.utils.inference import hidden_to_logits
 from core.analysis.utils import logits_top_tokens
 from core.analysis.evaluation import calculate_accuracy_on_datasets
-from core.task_vectors import run_icl, run_task_vector
-from core.utils.misc import limit_gpus, seed_everything
+from core.task_vectors import run_icl, run_task_vector, run_task_vector_noise1, run_task_vector_noise3, run_task_vector_noise2, run_task_vector_noise0002
+from core.utils.misc import seed_everything
 from core.experiments_config import MODELS_TO_EVALUATE, TASKS_TO_EVALUATE
 
 
@@ -40,21 +48,58 @@ def evaluate_task(model: PreTrainedModel, tokenizer: PreTrainedTokenizer, task_n
 
     # Evaluate ICL and Task Vector
     # TODO: Change back to 400, 100
-    # num_test_datasets, num_dev_datasets = 400, 100
-    num_test_datasets, num_dev_datasets = 50, 50
+    num_test_datasets, num_dev_datasets = 400, 100
+    # num_test_datasets, num_dev_datasets = 50, 50
     test_datasets = task.create_datasets(num_datasets=num_test_datasets, num_examples=num_examples)
     dev_datasets = task.create_datasets(num_datasets=num_dev_datasets, num_examples=num_examples)
     icl_predictions = run_icl(model, tokenizer, task, test_datasets)
-    tv_predictions, tv_dev_accuracy_by_layer, task_hiddens = run_task_vector(
+    tv_predictions, tv_dev_accuracy_by_layer, task_hiddens = run_task_vector(###add noise
         model,
         tokenizer,
         task,
         test_datasets,
         dev_datasets,
     )
+    
+    tv_predictions_noise1, tv_dev_accuracy_by_layer, task_hiddens = run_task_vector_noise1(###add noise
+        model,
+        tokenizer,
+        task,
+        test_datasets,
+        dev_datasets,
+    )
+    
+    # tv_predictions_noise2, tv_dev_accuracy_by_layer, task_hiddens = run_task_vector_noise2(###add noise
+    #     model,
+    #     tokenizer,
+    #     task,
+    #     test_datasets,
+    #     dev_datasets,
+    # )
+    
+    # tv_predictions_noise3, tv_dev_accuracy_by_layer, task_hiddens = run_task_vector_noise3(###add noise
+    #     model,
+    #     tokenizer,
+    #     task,
+    #     test_datasets,
+    #     dev_datasets,
+    # )
+    
+    # tv_predictions_noise0002, tv_dev_accuracy_by_layer, task_hiddens = run_task_vector_noise0002(###add noise
+    #     model,
+    #     tokenizer,
+    #     task,
+    #     test_datasets,
+    #     dev_datasets,
+    # )
+
     accuracies["tv_dev_by_layer"] = tv_dev_accuracy_by_layer
     accuracies["icl"] = calculate_accuracy_on_datasets(task, icl_predictions, test_datasets)
     accuracies["tv"] = calculate_accuracy_on_datasets(task, tv_predictions, test_datasets)
+    accuracies["tv_noise1"] = calculate_accuracy_on_datasets(task, tv_predictions_noise1, test_datasets)
+    # accuracies["tv_noise2"] = calculate_accuracy_on_datasets(task, tv_predictions_noise2, test_datasets)
+    # accuracies["tv_noise3"] = calculate_accuracy_on_datasets(task, tv_predictions_noise3, test_datasets)
+    # accuracies["tv_noise0002"] = calculate_accuracy_on_datasets(task, tv_predictions_noise0002, test_datasets)
 
     tv_ordered_tokens_by_layer = {}
     try:
@@ -86,7 +131,6 @@ def run_main_experiment(
     else:
         results = {}
 
-    limit_gpus(range(0, 8))
 
     print("Loading model and tokenizer...")
     if model is None or tokenizer is None:
@@ -110,12 +154,16 @@ def run_main_experiment(
         tic = time.time()
         accuracies, tv_ordered_tokens_by_layer = evaluate_task(model, tokenizer, task_name, num_examples)
 
-        print(f"Baseline Accuracy: {accuracies['baseline']:.2f}")
-        print(f"ICL Accuracy: {accuracies['icl']:.2f}")
-        print(f"Task Vector Accuracy: {accuracies['tv']:.2f}")
+        print(f"Baseline Accuracy: {accuracies['baseline']:.3f}")
+        print(f"ICL Accuracy: {accuracies['icl']:.3f}")
+        print(f"Task Vector Accuracy: {accuracies['tv']:.3f}")
+        print(f"Task Vector Accuracy with noise1: {accuracies['tv_noise1']:.3f}")
+        # print(f"Task Vector Accuracy with noise2: {accuracies['tv_noise2']:.3f}")
+        # print(f"Task Vector Accuracy with noise3: {accuracies['tv_noise3']:.3f}")
+        # print(f"Task Vector Accuracy with noise0002: {accuracies['tv_noise0002']:.3f}")
         print(f"Dev Accuracy by layer: ", end="")
         for layer, accuracy in accuracies["tv_dev_by_layer"].items():
-            print(f"{layer}: {accuracy:.2f}, ", end="")
+            print(f"{layer}: {accuracy:.3f}, ", end="")
         print()
         print("Time:", time.time() - tic)
 

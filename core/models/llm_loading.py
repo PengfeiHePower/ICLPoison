@@ -133,8 +133,8 @@ def load_model_and_tokenizer(
 MODEL_PATHS = {
     "pythia": {
         "1.4B": "EleutherAI/pythia-1.4b",
-        "2.8B": "EleutherAI/pythia-2.8b",
-        "6.9B": "EleutherAI/pythia-6.9b",
+        "2.8B": "/data1/pengfei/pythia-2.8b",
+        "6.9B": "/data1/pengfei/pythia-6.9b",
         "12B": "EleutherAI/pythia-12b",
     },
     "llama": {
@@ -142,13 +142,14 @@ MODEL_PATHS = {
         "13B": llama_local_path("huggingface", "13B"),
         "30B": llama_local_path("huggingface", "30B"),
         "65B": llama_local_path("huggingface", "65B"),
+        "70B": llama_local_path("huggingface", "70B"),
     },
     "falcon": {
-        "7B": "tiiuae/falcon-7b",
+        "7B": "/data1/pengfei/falcon-7b",
         "40B": "tiiuae/falcon-40b",
     },
     "gpt-j": {
-        "6B": "EleutherAI/gpt-j-6B",
+        "6B": "/data1/pengfei/gpt-j-6b",
     },
     "gpt-2": {
         "0.35B": "gpt2-medium",
@@ -156,7 +157,7 @@ MODEL_PATHS = {
         "1.5B": "gpt2-xl",
     },
     "mpt": {
-        "7B": "mosaicml/mpt-7b",
+        "7B": "/data1/pengfei/mpt-7b",
     },
     "gpt-neox": {
         "20B": "EleutherAI/gpt-neox-20b",
