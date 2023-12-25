@@ -18,6 +18,7 @@ import string
 import logging
 import numpy as np
 import time
+import copy
 from datetime import datetime
 from typing import Any, List, Optional, Iterable
 
@@ -41,7 +42,7 @@ from core.models.llm_loading import load_model_and_tokenizer
 from core.models.utils.inference import hidden_to_logits
 from core.analysis.utils import logits_top_tokens
 from core.analysis.evaluation import calculate_accuracy_on_datasets
-from core.task_vectors import run_icl, run_task_vector, run_task_vector_noise1, run_task_vector_noise2, run_task_vector_noise3
+from core.task_vectors import run_icl, run_task_vector, run_task_vector_noise1, run_task_vector_noise2, run_task_vector_noise3, get_task_vector, get_best_layer, modulated_generate
 from core.experiments_config import MODELS_TO_EVALUATE, TASKS_TO_EVALUATE
 from core.utils.misc import limit_gpus, seed_everything
 from core.data.datasets.few_shot_dataset import FewShotDataset
@@ -52,11 +53,11 @@ parser.add_argument("--n_gpu", type=int, default=8)
 parser.add_argument("--n_process", type=int, default=40)
 parser.add_argument("--n_prefix_tokens", type=int, default=10)
 
-parser.add_argument("--task_name", type=str, default = 'glue-cola')
+parser.add_argument("--task_name", type=str, default = 'poem_sentiment')
 
 parser.add_argument("--log_dir", default='clean_eval_icl/logs', type=str)
 
-parser.add_argument("--dataset", type=str, default='glue-cola')
+parser.add_argument("--dataset", type=str, default='poem_sentiment')
 # parser.add_argument("--tasktype", type=str, default=None)
 parser.add_argument("--num_exm", type=int, default=4)
 parser.add_argument("--data_dir", type=str, default="/data1/pengfei/data/")
@@ -72,9 +73,6 @@ parser.add_argument("--local_rank", type=int, default=-1, help="local_rank for d
 
 parser.add_argument("--model_type", type=str, default = 'pythia')
 parser.add_argument("--model_variant", type=str, default = '2.8B')
-
-parser.add_argument("--clean", type=bool, default=True)
-parser.add_argument("--adv_trainpath", type=str, default=None)
 
 args = parser.parse_args()
 print('args:', args)
@@ -115,85 +113,120 @@ print("Loaded model and tokenizer.")
 print(f"Evalauet on task: {args.task_name}")
 # dataset = task_name
 #load data
-if args.clean == True:
-        train_data = load_data(split = "train", k = args.k, seed = args.seed, 
-               datasets = None if args.dataset is None else args.task_name.split(","), 
-                           data_dir = args.data_dir)
-else:
-        if args.adv_trainpath == None:
-                print('Adv training path should not be empty!')
-                exit(0)
-        else:
-                with open(args.adv_trainpath, 'r') as file:
-                        train_data = json.load(file)
+train_data = load_data(split = "train", k = args.k, seed = args.seed, 
+                        datasets = None if args.dataset is None else args.task_name.split(","), 
+                        data_dir = args.data_dir)
 test_data = load_data(split = "test", k = args.k, seed = args.seed, 
-        datasets = None if args.dataset is None else args.task_name.split(","),
-        data_dir = args.data_dir)
+                datasets = None if args.dataset is None else args.task_name.split(","),
+                data_dir = args.data_dir)
 dev_data = []
 for seed in [13, 21, 42, 87, 100]:
-        dev_data = dev_data + load_data(split = "dev", k = 4, seed = seed, 
+    dev_data = dev_data + load_data(split = "dev", k = 4, seed = seed, 
                 datasets = None if args.dataset is None else args.task_name.split(","),
                 data_dir = args.data_dir)
     
-print('Dataset loaded.')
-test_datasets = transfer_fewshot(train_data, test_data, 2)
-dev_datasets = transfer_fewshot(train_data, dev_data, 2)
+print('Loaded dataset.')
+
+test_datasets = transfer_fewshot(train_data, test_data, 1)
+dev_datasets = transfer_fewshot(train_data, dev_data, 1)
 #task.create_datasets(num_datasets=num_test_datasets, num_examples=num_examples)
 print('Few-shot datasests prepared.')
 
 
 task = get_task_by_name(tokenizer=tokenizer, task_name=args.task_name)
 task.get_data(train_data, test_data)
+# print(tokenizer.vocab_size)
 
-
-print("Evaluate ICL performance.")
-icl_predictions = run_icl(model, tokenizer, task, test_datasets, generate_kwargs={"max_new_tokens": args.max_new_tokens})
-icl_acc = calculate_accuracy_on_datasets(task, icl_predictions, test_datasets)
-print(f"ICL Accuracy: {icl_acc:.3f}")
-
-exit(0)
-
-print("Evaluate task vector Acc.")
-tv_predictions, tv_dev_accuracy_by_layer, task_hiddens = run_task_vector(
-        model,
-        tokenizer,
-        task,
-        test_datasets,
-        dev_datasets,
+# extract layer for tv
+best_layer = get_best_layer(
+    model,
+    tokenizer,
+    task,
+    dev_datasets,
 )
-tv_acc = calculate_accuracy_on_datasets(task, tv_predictions, test_datasets)
-best_intermediate_layer = int(max(tv_dev_accuracy_by_layer, key=tv_dev_accuracy_by_layer.get))
-    
-tv_predictions_noise1, tv_dev_accuracy_by_layer, task_hiddens = run_task_vector_noise1(###add noise
-        model,
-        tokenizer,
-        task,
-        test_datasets,
-        dev_datasets,
-)
-tv_acc_noise1 = calculate_accuracy_on_datasets(task,  tv_predictions_noise1, test_datasets)
-    
-tv_predictions_noise2, tv_dev_accuracy_by_layer, task_hiddens = run_task_vector_noise2(###add noise
-        model,
-        tokenizer,
-        task,
-        test_datasets,
-        dev_datasets,
-)
-tv_acc_noise2 = calculate_accuracy_on_datasets(task,  tv_predictions_noise2, test_datasets)
-    
-tv_predictions_noise3, tv_dev_accuracy_by_layer, task_hiddens = run_task_vector_noise3(###add noise
-        model,
-        tokenizer,
-        task,
-        test_datasets,
-        dev_datasets,
-)
-tv_acc_noise3 = calculate_accuracy_on_datasets(task,  tv_predictions_noise3, test_datasets)
-    
+print(f"best layer: {best_layer}")
 
-print(f"Task Vector Accuracy: {tv_acc:.3f}")
-print(f"Best layer: {best_intermediate_layer:d}")
-print(f"Task Vector Accuracy with Noise 1: {tv_acc_noise1:.3f}")
-print(f"Task Vector Accuracy with Noise 2: {tv_acc_noise2:.3f}")
-print(f"Task Vector Accuracy with Noise 3: {tv_acc_noise3:.3f}")
+print("Start poisoning...")
+adv_train_data_best = []
+adv_train_data_all = []
+example_dummy = dev_data[0]
+train_n = len(train_data)
+for i in range(10):
+    print(f"Sample:{i}")
+    # extract clean latent representation
+    example_tr = train_data[i]
+    fewshot_datas = [FewShotDataset(
+        example_tr['input'],
+        example_tr['output'],
+        example_dummy['input'],
+        example_dummy['output']
+    )]
+    tv_o = get_task_vector(
+                model,
+                tokenizer,
+                task,
+                fewshot_datas,)
+    tv_o_l2 = torch.norm(tv_o, p=2, dim=2, keepdim=True)
+    tv_o_normal = tv_o/tv_o_l2
+    tv_o_normal_best = tv_o_normal[:,best_layer,:]
+    
+    # greedy search for adv suffix
+    suffix_id_best = [0,0]
+    loss_best = 0
+    dummy_ids = [0,0]
+    # t1 = random.sample(list(range(tokenizer.vocab_size)), 100)
+    # t2 = random.sample(list(range(tokenizer.vocab_size)), 100)
+    for j in range(tokenizer.vocab_size):
+        print(f"First token:{j}")
+        #tokenizer.vocab_size
+        adv_datas = copy.deepcopy(fewshot_datas)
+        dummy_ids[0] = j
+        dummy_str = tokenizer.decode(dummy_ids)
+        adv_datas[0].train_inputs += dummy_str
+        tv_adv = get_task_vector(
+                model,
+                tokenizer,
+                task,
+                adv_datas,)
+        tv_adv_l2 = torch.norm(tv_adv, p=2, dim=2, keepdim=True)
+        tv_adv_normal = tv_adv/tv_adv_l2
+        tv_adv_normal_best = tv_adv_normal[:,best_layer,:]
+        loss_dummy_best = torch.norm(tv_o_normal_best - tv_adv_normal_best, p=2)
+        print(f"loss_dummy_best:{loss_dummy_best}")
+        if loss_dummy_best>loss_best:
+            loss_best = loss_dummy_best
+            suffix_id_best[0]=j
+        
+    dummy_best_ids = copy.deepcopy(suffix_id_best)
+    for j in range(tokenizer.vocab_size):
+        print(f"Second token:{j}")
+        adv_datas = copy.deepcopy(fewshot_datas)
+        dummy_best_ids[1] = j
+        dummy_best_str = tokenizer.decode(dummy_best_ids)
+        adv_datas[0].train_inputs += dummy_best_str
+        tv_adv = get_task_vector(
+            model,
+            tokenizer,
+            task,
+            adv_datas,)
+        tv_adv_l2 = torch.norm(tv_adv, p=2, dim=2, keepdim=True)
+        tv_adv_normal = tv_adv/tv_adv_l2
+        tv_adv_normal_best = tv_adv_normal[:,best_layer,:]
+        loss_dummy_best = torch.norm(tv_o_normal_best - tv_adv_normal_best, p=2)
+        print(f"loss_dummy_best:{loss_dummy_best}")
+        if loss_dummy_best>loss_best:
+            loss_best = loss_dummy_best
+            suffix_id_best[1]=j
+    
+    adv_best_suffix = tokenizer.decode(suffix_id_best)
+    example_best = copy.deepcopy(example_tr)
+    example_best['input'] += adv_best_suffix
+    adv_train_data_best.append(example_best)
+
+print('Saving...')
+savedir = '/home/pengfei/Documents/icl_task_vectors/adv_train/'+args.task_name
+if not os.path.exists(savedir):
+    os.makedirs(savedir)
+filename = args.model_type+args.model_variant
+with open(os.path.join(savedir, filename+'_best'), 'w') as file:
+    json.dump(adv_train_data_best, file)

@@ -97,3 +97,5 @@ outputs/logs
 
 # Deprecated code
 _deprecated/
+
+logs/

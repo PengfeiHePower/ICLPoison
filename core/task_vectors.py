@@ -32,9 +32,6 @@ def run_icl(
     format_dataset_kwargs = {"include_train": include_train}
     inputs = tokenize_datasets(tokenizer, test_datasets, format_dataset_kwargs=format_dataset_kwargs)
     new_ids = batch_generate(model, tokenizer, inputs=inputs, generate_kwargs=generate_kwargs)
-    print(new_ids)
-    print(f"new_ids length:{len(new_ids)}")
-    print(f"one id length:{len(new_ids[0])}")
     predictions = decode_predictions(new_ids, tokenizer)
 
     return predictions
@@ -71,6 +68,38 @@ def run_task_vector(
 
     return predictions, dev_accuracy_by_layer, task_hiddens
 
+def get_task_vector(
+    model: PreTrainedModel,
+    tokenizer: PreTrainedTokenizer,
+    task: Task,
+    test_datasets: List[FewShotDataset],
+    multi_context: bool = False,
+):
+
+    task_hiddens = get_task_hiddens(model, tokenizer, task, test_datasets, multi_context=multi_context)
+
+    return task_hiddens
+
+def get_best_layer(
+    model: PreTrainedModel,
+    tokenizer: PreTrainedTokenizer,
+    task: Task,
+    dev_datasets: List[FewShotDataset],
+    layers_to_test: Optional[Iterable[int]] = None,
+    multi_context: bool = False,
+):
+    dev_accuracy_by_layer = task_vector_accuracy_by_layer(
+        model,
+        tokenizer,
+        task,
+        dev_datasets,
+        layers_to_test=layers_to_test,
+        multi_context=multi_context,
+    )
+    best_intermediate_layer = int(max(dev_accuracy_by_layer, key=dev_accuracy_by_layer.get))
+    
+    return best_intermediate_layer
+
 def run_task_vector_noise1(
     model: PreTrainedModel,
     tokenizer: PreTrainedTokenizer,
@@ -94,7 +123,7 @@ def run_task_vector_noise1(
     variance_per_layer = torch.var(task_hiddens, dim=2, unbiased=False)  # Variance along the embedding dimension
     for i in range(task_hiddens.shape[1]):  # Iterate over layers
         layer_variance = variance_per_layer[:, i]  # Variance for the current layer
-        noise = torch.randn_like(task_hiddens[:, i, :]) * torch.sqrt(layer_variance*0.1).unsqueeze(1)
+        noise = torch.randn_like(task_hiddens[:, i, :]) * torch.sqrt(layer_variance).unsqueeze(1)
         task_hiddens[:, i, :] += noise
     # variance = torch.var(task_hiddens[:, best_intermediate_layer, :], dim=0)
     # noise = torch.randn(task_hiddens.shape[0], task_hiddens.shape[2]) * torch.sqrt(variance)
@@ -135,7 +164,7 @@ def run_task_vector_noise2(
     variance_per_layer = torch.var(task_hiddens, dim=2, unbiased=False)  # Variance along the embedding dimension
     for i in range(task_hiddens.shape[1]):  # Iterate over layers
         layer_variance = variance_per_layer[:, i]  # Variance for the current layer
-        noise = torch.randn_like(task_hiddens[:, i, :]) * torch.sqrt(layer_variance*4).unsqueeze(1)
+        noise = torch.randn_like(task_hiddens[:, i, :]) * torch.sqrt(layer_variance*0.1).unsqueeze(1)
         task_hiddens[:, i, :] += noise
     # variance = torch.var(task_hiddens[:, best_intermediate_layer, :], dim=0)
     # noise = torch.randn(task_hiddens.shape[0], task_hiddens.shape[2]) * torch.sqrt(variance)
@@ -176,7 +205,7 @@ def run_task_vector_noise3(
     variance_per_layer = torch.var(task_hiddens, dim=2, unbiased=False)  # Variance along the embedding dimension
     for i in range(task_hiddens.shape[1]):  # Iterate over layers
         layer_variance = variance_per_layer[:, i]  # Variance for the current layer
-        noise = torch.randn_like(task_hiddens[:, i, :]) * torch.sqrt(layer_variance*9).unsqueeze(1)
+        noise = torch.randn_like(task_hiddens[:, i, :]) * torch.sqrt(layer_variance*0.01).unsqueeze(1)
         task_hiddens[:, i, :] += noise
     # variance = torch.var(task_hiddens[:, best_intermediate_layer, :], dim=0)
     # noise = torch.randn(task_hiddens.shape[0], task_hiddens.shape[2]) * torch.sqrt(variance)
