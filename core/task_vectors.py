@@ -33,6 +33,7 @@ def run_icl(
     inputs = tokenize_datasets(tokenizer, test_datasets, format_dataset_kwargs=format_dataset_kwargs)
     new_ids = batch_generate(model, tokenizer, inputs=inputs, generate_kwargs=generate_kwargs)
     predictions = decode_predictions(new_ids, tokenizer)
+    print(f"predictions:{predictions}")
 
     return predictions
 

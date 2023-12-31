@@ -162,8 +162,10 @@ def batch_generate(
         generate_ids.append(batch_ids)
 
     generate_ids = torch.cat(generate_ids, dim=0)
+    # print(f"generate_ids:{generate_ids}")
 
     new_ids = generate_ids[:, inputs[input_type].shape[1] :]
+    # print(f"new_ids:{new_ids}") 
 
     # outs = tokenizer.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)
     # completions = [out[len(prompt) :] for out, prompt in zip(outs, prompts)]
@@ -175,6 +177,7 @@ def decode_predictions(
     output_ids: torch.Tensor, tokenizer: PreTrainedTokenizer, few_shot_format: FewShotFormat = FewShotFormat()
 ) -> List[str]:
     new_tokens = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
+    print(f"new_tokens:{new_tokens}")
     answers = [tokens.split(few_shot_format.example_separator)[0] for tokens in new_tokens]
     return answers
 

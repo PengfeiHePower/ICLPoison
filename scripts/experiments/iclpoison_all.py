@@ -147,11 +147,11 @@ task.get_data(train_data, test_data)
 # print(f"best layer: {best_layer}")
 
 print("Start poisoning...")
-adv_train_data_best = []
 adv_train_data_all = []
 example_dummy = dev_data[0]
 train_n = len(train_data)
-for i in range(10):
+poison_id = random.sample(list(range(train_n)), 10) #randomly select poisoned samples
+for i in poison_id:
     print(f"Sample:{i}")
     #train_n
     # extract clean latent representation
@@ -172,12 +172,11 @@ for i in range(10):
 
     
     # greedy search for adv suffix
-    suffix_id_all = [0,0]
+    suffix_id_all = [0]*5
     loss_all = 0
-    dummy_ids = [0,0]
-    # t1 = random.sample(list(range(tokenizer.vocab_size)), 100)
-    # t2 = random.sample(list(range(tokenizer.vocab_size)), 100)
-    for j in range(tokenizer.vocab_size):
+    dummy_ids = [0]*5
+    t = random.sample(list(range(tokenizer.vocab_size)), 100)
+    for j in t:
         print(f"First token:{j}")
         adv_datas = copy.deepcopy(fewshot_datas)
         dummy_ids[0] = j
@@ -197,7 +196,8 @@ for i in range(10):
             suffix_id_all[0]=j
         
     dummy_all_ids = copy.deepcopy(suffix_id_all)
-    for j in range(tokenizer.vocab_size):
+    t = random.sample(list(range(tokenizer.vocab_size)), 100)
+    for j in t:
         print(f"Second token:{j}")
         adv_datas = copy.deepcopy(fewshot_datas)
         dummy_all_ids[1] = j
@@ -216,6 +216,70 @@ for i in range(10):
             loss_all=loss_dummy_all
             suffix_id_all[1]=j
     
+    dummy_all_ids = copy.deepcopy(suffix_id_all)
+    t = random.sample(list(range(tokenizer.vocab_size)), 100)
+    for j in t:
+        print(f"Third token:{j}")
+        adv_datas = copy.deepcopy(fewshot_datas)
+        dummy_all_ids[2] = j
+        dummy_all_str = tokenizer.decode(dummy_all_ids)
+        adv_datas[0].train_inputs += dummy_all_str
+        tv_adv = get_task_vector(
+                model,
+                tokenizer,
+                task,
+                adv_datas,)
+        tv_adv_l2 = torch.norm(tv_adv, p=2, dim=2, keepdim=True)
+        tv_adv_normal = tv_adv/tv_adv_l2
+        loss_dummy_all = torch.mean(torch.norm(tv_o_normal - tv_adv_normal, dim=2))
+        print(f"loss_dummy_all:{loss_dummy_all}")
+        if loss_dummy_all>loss_all:
+            loss_all=loss_dummy_all
+            suffix_id_all[2]=j
+    
+    
+    dummy_all_ids = copy.deepcopy(suffix_id_all)
+    t = random.sample(list(range(tokenizer.vocab_size)), 100)
+    for j in t:
+        print(f"Forth token:{j}")
+        adv_datas = copy.deepcopy(fewshot_datas)
+        dummy_all_ids[3] = j
+        dummy_all_str = tokenizer.decode(dummy_all_ids)
+        adv_datas[0].train_inputs += dummy_all_str
+        tv_adv = get_task_vector(
+                model,
+                tokenizer,
+                task,
+                adv_datas,)
+        tv_adv_l2 = torch.norm(tv_adv, p=2, dim=2, keepdim=True)
+        tv_adv_normal = tv_adv/tv_adv_l2
+        loss_dummy_all = torch.mean(torch.norm(tv_o_normal - tv_adv_normal, dim=2))
+        print(f"loss_dummy_all:{loss_dummy_all}")
+        if loss_dummy_all>loss_all:
+            loss_all=loss_dummy_all
+            suffix_id_all[3]=j
+    
+    dummy_all_ids = copy.deepcopy(suffix_id_all)
+    t = random.sample(list(range(tokenizer.vocab_size)), 100)
+    for j in t:
+        print(f"Fifth token:{j}")
+        adv_datas = copy.deepcopy(fewshot_datas)
+        dummy_all_ids[4] = j
+        dummy_all_str = tokenizer.decode(dummy_all_ids)
+        adv_datas[0].train_inputs += dummy_all_str
+        tv_adv = get_task_vector(
+                model,
+                tokenizer,
+                task,
+                adv_datas,)
+        tv_adv_l2 = torch.norm(tv_adv, p=2, dim=2, keepdim=True)
+        tv_adv_normal = tv_adv/tv_adv_l2
+        loss_dummy_all = torch.mean(torch.norm(tv_o_normal - tv_adv_normal, dim=2))
+        print(f"loss_dummy_all:{loss_dummy_all}")
+        if loss_dummy_all>loss_all:
+            loss_all=loss_dummy_all
+            suffix_id_all[4]=j
+    
     adv_all_suffix = tokenizer.decode(suffix_id_all)
     example_all = copy.deepcopy(example_tr)
     example_all['input'] += adv_all_suffix
@@ -228,3 +292,11 @@ if not os.path.exists(savedir):
 filename = args.model_type+args.model_variant
 with open(os.path.join(savedir, filename+'_all'), 'w') as file:
     json.dump(adv_train_data_all, file)
+print(f"Poisoned datasets saved.")
+    
+print(f"Begin poisoned ICL evaluating..")
+adv_test_datasets = transfer_fewshot(adv_train_data_all, test_data, 5)
+adv_icl_predictions = run_icl(model, tokenizer, task, adv_test_datasets, generate_kwargs={"max_new_tokens": args.max_new_tokens})
+adv_icl_acc = calculate_accuracy_on_datasets(task, adv_icl_predictions, test_datasets)
+print(f"Poisoned ICL Accuracy: {adv_icl_acc:.3f}")
+print(f"Done.")

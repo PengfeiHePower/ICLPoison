@@ -138,8 +138,8 @@ MODEL_PATHS = {
         "12B": "EleutherAI/pythia-12b",
     },
     "llama": {
-        "7B": llama_local_path("huggingface", "7B"),
-        "13B": llama_local_path("huggingface", "13B"),
+        "7B": "/data1/pengfei/Llama-2-7b-hf", #llama_local_path("huggingface", "7B"),
+        "13B": "/data1/pengfei/Llama-2-13b-hf", #llama_local_path("huggingface", "13B"),
         "30B": llama_local_path("huggingface", "30B"),
         "65B": llama_local_path("huggingface", "65B"),
         "70B": llama_local_path("huggingface", "70B"),
@@ -160,7 +160,7 @@ MODEL_PATHS = {
         "7B": "/data1/pengfei/mpt-7b",
     },
     "gpt-neox": {
-        "20B": "EleutherAI/gpt-neox-20b",
+        "20B": "/data1/pengfei/gpt-neox-20b",
     },
     "starcoder": {
         "regular": "bigcode/starcoder",
