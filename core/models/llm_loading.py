@@ -148,6 +148,9 @@ MODEL_PATHS = {
         "7B": "/data1/pengfei/falcon-7b",
         "40B": "tiiuae/falcon-40b",
     },
+    "vicuna":{
+        "7B": "/data1/pengfei/vicuna-7b-v1.5"
+    },
     "gpt-j": {
         "6B": "/data1/pengfei/gpt-j-6b",
     },

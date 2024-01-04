@@ -15,6 +15,7 @@ from core.models.utils.inference import (
     get_input_type,
     modified_forward,
     tokenize_datasets,
+    tokenize_datasets_icl,
     traced_forward,
 )
 from core.models.utils.llm_layers import get_layers
@@ -27,13 +28,14 @@ def run_icl(
     task: Task,
     test_datasets: List[FewShotDataset],
     include_train: bool = True,
-    generate_kwargs={"max_new_tokens": 1}
+    generate_kwargs={"max_new_tokens": 10}
 ) -> List[str]:
     format_dataset_kwargs = {"include_train": include_train}
-    inputs = tokenize_datasets(tokenizer, test_datasets, format_dataset_kwargs=format_dataset_kwargs)
-    new_ids = batch_generate(model, tokenizer, inputs=inputs, generate_kwargs=generate_kwargs)
+    inputs = tokenize_datasets_icl(tokenizer, test_datasets, format_dataset_kwargs=format_dataset_kwargs)
+    
+    new_ids = batch_generate(model, tokenizer, inputs=inputs, generate_kwargs=generate_kwargs, batch_size=1)
     predictions = decode_predictions(new_ids, tokenizer)
-    print(f"predictions:{predictions}")
+    # print(f"predictions:{predictions}")
 
     return predictions
 

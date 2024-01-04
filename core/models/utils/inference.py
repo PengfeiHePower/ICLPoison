@@ -76,23 +76,38 @@ def _get_forward_kwargs(forward_kwargs: Optional[Dict] = None) -> Dict:
     return forward_kwargs
 
 
+# def _get_batches(inputs: Dict, batch_size: int, show_progress: bool = False) -> Iterable[Dict]:
+#     input_type = get_input_type(inputs)
+
+#     num_inputs = len(inputs[input_type])
+#     batches_idx = range(0, num_inputs, batch_size)
+#     batches = (nested_apply(inputs, lambda t: t[i : i + batch_size]) for i in batches_idx)
+#     if show_progress:
+#         batches = tqdm(batches)
+
+#     return batches
+
+
 def _get_batches(inputs: Dict, batch_size: int, show_progress: bool = False) -> Iterable[Dict]:
     input_type = get_input_type(inputs)
 
     num_inputs = len(inputs[input_type])
-    batches_idx = range(0, num_inputs, batch_size)
-    batches = (nested_apply(inputs, lambda t: t[i : i + batch_size]) for i in batches_idx)
-    if show_progress:
-        batches = tqdm(batches)
+    batches_idx = range(num_inputs)
+    batches = [
+    {"input_ids": inputs["input_ids"][i:i + 1], 
+     "attention_mask": inputs["attention_mask"][i:i + 1]}
+    for i in batches_idx
+]
+    # if show_progress:
+    #     batches = tqdm(batches)
 
     return batches
-
 
 def batch_forward(
     model: PreTrainedModel,
     inputs: Dict,
     forward_kwargs: Optional[Dict] = None,
-    batch_size: int = 100,
+    batch_size: int = 1,
     show_progress: bool = False,
 ) -> CausalLMOutputWithPast:
     batch_size = batch_size or _auto_batch_size(model, inputs)
@@ -131,6 +146,43 @@ def _auto_batch_size(model: PreTrainedModel, inputs: Dict) -> int:
 
     return batch_size
 
+# def batch_generate(
+#     model: PreTrainedModel,
+#     tokenizer: PreTrainedTokenizer,
+#     inputs: Dict,
+#     generate_kwargs: Optional[Dict] = None,
+#     batch_size: Optional[int] = None,
+#     show_progress: bool = False,
+# ) -> List[str]:
+#     batch_size = batch_size or _auto_batch_size(model, inputs)
+
+#     generate_kwargs = _get_forward_kwargs(generate_kwargs)
+#     batches = _get_batches(inputs, batch_size, show_progress=show_progress)
+#     input_type = get_input_type(inputs)
+
+#     device = model.device
+
+#     generate_ids = []
+#     for batch_inputs in batches:
+#         batch_inputs = nested_apply(batch_inputs, lambda t: t.to("cpu"))
+
+#         batch_ids = model.generate(
+#             **batch_inputs,
+#             **generate_kwargs,
+#             do_sample=False,
+#             num_return_sequences=1,
+#             pad_token_id=tokenizer.pad_token_id,
+#         )
+#         generate_ids.append(batch_ids)
+
+#     generate_ids = torch.cat(generate_ids, dim=0)
+
+#     new_ids = generate_ids[:, inputs[input_type].shape[1] :]
+
+#     # outs = tokenizer.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)
+#     # completions = [out[len(prompt) :] for out, prompt in zip(outs, prompts)]
+
+#     return new_ids
 
 def batch_generate(
     model: PreTrainedModel,
@@ -140,35 +192,24 @@ def batch_generate(
     batch_size: Optional[int] = None,
     show_progress: bool = False,
 ) -> List[str]:
-    batch_size = batch_size or _auto_batch_size(model, inputs)
+    # batch_size = batch_size or _auto_batch_size(model, inputs)
 
     generate_kwargs = _get_forward_kwargs(generate_kwargs)
-    batches = _get_batches(inputs, batch_size, show_progress=show_progress)
-    input_type = get_input_type(inputs)
 
     device = model.device
 
-    generate_ids = []
-    for batch_inputs in batches:
-        batch_inputs = nested_apply(batch_inputs, lambda t: t.to("cpu"))
+    new_ids = []
+    for batch_inputs in inputs:
+        batch_inputs = nested_apply(batch_inputs, lambda t: t.to(device))
 
-        batch_ids = model.generate(
-            **batch_inputs,
-            **generate_kwargs,
-            do_sample=False,
+        batch_ids = model.generate(**batch_inputs, **generate_kwargs, do_sample=False,
             num_return_sequences=1,
-            pad_token_id=tokenizer.pad_token_id,
-        )
-        generate_ids.append(batch_ids)
-
-    generate_ids = torch.cat(generate_ids, dim=0)
-    # print(f"generate_ids:{generate_ids}")
-
-    new_ids = generate_ids[:, inputs[input_type].shape[1] :]
-    # print(f"new_ids:{new_ids}") 
-
-    # outs = tokenizer.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)
-    # completions = [out[len(prompt) :] for out, prompt in zip(outs, prompts)]
+            pad_token_id=tokenizer.pad_token_id)
+        new_id = batch_ids[:, batch_inputs['input_ids'].shape[1] :]
+        new_ids.append(new_id)
+        
+        # generate_ids.append(batch_ids)
+    new_ids = torch.cat(new_ids, dim=0)
 
     return new_ids
 
@@ -180,6 +221,11 @@ def decode_predictions(
     print(f"new_tokens:{new_tokens}")
     answers = [tokens.split(few_shot_format.example_separator)[0] for tokens in new_tokens]
     return answers
+
+
+def tokenize_prompts_icl(tokenizer: PreTrainedTokenizer, prompts: List[str]) -> torch.Tensor:
+    return [tokenizer(prompt, return_tensors="pt", padding=True, return_token_type_ids=False) for prompt in prompts]
+
 
 
 def tokenize_prompts(tokenizer: PreTrainedTokenizer, prompts: List[str]) -> torch.Tensor:
@@ -194,6 +240,15 @@ def tokenize_datasets(
 ) -> torch.Tensor:
     prompts = few_shot_format.format_datasets(datasets, **format_dataset_kwargs)
     return tokenize_prompts(tokenizer, prompts)
+
+def tokenize_datasets_icl(
+    tokenizer: PreTrainedTokenizer,
+    datasets: List[FewShotDataset],
+    few_shot_format: FewShotFormat = FewShotFormat(),
+    format_dataset_kwargs: Optional[dict] = {},
+) -> torch.Tensor:
+    prompts = few_shot_format.format_datasets(datasets, **format_dataset_kwargs)
+    return tokenize_prompts_icl(tokenizer, prompts)
 
 
 def hidden_to_logits(model: PreTrainedModel, hidden: torch.Tensor) -> torch.Tensor:

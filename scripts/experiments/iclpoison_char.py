@@ -1,4 +1,4 @@
-## character-level perturbation on all layers
+## token-level subsitituation on all layers' representations
 from dotenv import load_dotenv
 
 load_dotenv(".env")
@@ -48,7 +48,7 @@ from core.experiments_config import MODELS_TO_EVALUATE, TASKS_TO_EVALUATE
 from core.utils.misc import limit_gpus, seed_everything
 from core.data.datasets.few_shot_dataset import FewShotDataset
 
-import textattack as tatk # load textattack package for more adversarial attack
+# import textattack as tatk # load textattack package for more adversarial attack
 
 
 parser = argparse.ArgumentParser()
@@ -58,7 +58,7 @@ parser.add_argument("--n_prefix_tokens", type=int, default=10)
 
 parser.add_argument("--task_name", type=str, default = 'poem_sentiment')
 
-parser.add_argument("--log_dir", default='clean_eval_icl/logs', type=str)
+parser.add_argument("--log_dir", default='iclpoison_token/logs', type=str)
 
 parser.add_argument("--dataset", type=str, default='poem_sentiment')
 # parser.add_argument("--tasktype", type=str, default=None)
@@ -76,6 +76,8 @@ parser.add_argument("--local_rank", type=int, default=-1, help="local_rank for d
 
 parser.add_argument("--model_type", type=str, default = 'pythia')
 parser.add_argument("--model_variant", type=str, default = '2.8B')
+
+parser.add_argument("--budget", type=int, default=3, help='number of replaced tokens')
 
 args = parser.parse_args()
 print('args:', args)
@@ -104,6 +106,43 @@ def transfer_fewshot(
         ))
     return fewshot_data
 
+def evaluate_importance(inputs, model, tokenizer, baseline_output):#inputs is fewshot class, baseline_output is the hidden state of original fewshot data
+    
+    original_input = tokenizer(inputs[0].train_inputs, return_tensors="pt")
+
+    # Store the importance of each token
+    token_importance = []
+
+    # Evaluate the importance of each token
+    for i in range(len(original_input["input_ids"][0])):
+        perturbed_input = copy.deepcopy(inputs)
+        # Create a copy of the original input IDs
+        perturbed_ids = original_input["input_ids"].clone()
+
+        # Replace the token with [MASK] or another token
+        perturbed_ids = torch.cat([perturbed_ids[0][:i], perturbed_ids[0][i+1:]])
+        perturbed_text = tokenizer.decode(perturbed_ids)
+        perturbed_input[0].train_inputs = perturbed_text
+        
+
+        # Evaluate the model with the perturbed input
+        perturbed_tv = get_task_vector(
+                model,
+                tokenizer,
+                task,
+                perturbed_input)
+        perturbed_tv_l2 = torch.norm(perturbed_tv, p=2, dim=2, keepdim=True)
+        perturbed_tv_normal = perturbed_tv/perturbed_tv_l2
+
+        # Calculate the change in output
+        change = torch.mean(torch.norm(baseline_output - perturbed_tv_normal, dim=2))
+        token_importance.append(change)
+
+    # # Sort tokens by their importance (change in output)
+    # token_importance.sort(key=lambda x: x[1], reverse=True)
+
+    return token_importance
+
 print(f"Loading model and tokenizer {args.model_type, args.model_variant}")
 model_type = args.model_type
 model_variant = args.model_variant
@@ -128,21 +167,41 @@ for seed in [13, 21, 42, 87, 100]:
                 datasets = None if args.dataset is None else args.task_name.split(","),
                 data_dir = args.data_dir)
     
-print('Loaded dataset.')
+print('Dataset loaded.')
 
 test_datasets = transfer_fewshot(train_data, test_data, 1)
 dev_datasets = transfer_fewshot(train_data, dev_data, 1)
 #task.create_datasets(num_datasets=num_test_datasets, num_examples=num_examples)
 print('Few-shot datasests prepared.')
 
-
 task = get_task_by_name(tokenizer=tokenizer, task_name=args.task_name)
 task.get_data(train_data, test_data)
 
 
 ### begin poisoning
-# prepare datasets
-label_list = train_data[0][""]
+example_dummy = dev_data[0]
+for i in range(2):
+    #Stage 1:compute token influence score  
+    example_tr = train_data[i]
+    fewshot_datas = [FewShotDataset(
+        example_tr['input'],
+        example_tr['output'],
+        example_dummy['input'],
+        example_dummy['output']
+    )]
+    tv_o = get_task_vector(
+                model,
+                tokenizer,
+                task,
+                fewshot_datas)
+    tv_o_l2 = torch.norm(tv_o, p=2, dim=2, keepdim=True)
+    tv_o_normal = tv_o/tv_o_l2
+    
+    importance_score = evaluate_importance(fewshot_datas, model, tokenizer, tv_o_normal)
+    print(f"importance_score:{importance_score}")
+    input(111)
+    
+    
 
 exit(0)
 

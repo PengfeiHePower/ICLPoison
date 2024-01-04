@@ -107,7 +107,7 @@ print(f"Loading model and tokenizer {args.model_type, args.model_variant}")
 model_type = args.model_type
 model_variant = args.model_variant
 model, tokenizer = load_model_and_tokenizer(model_type, model_variant)
-print("Loaded model and tokenizer.")
+print("Model and tokenizer loaded.")
 
 # tasks = ["glue-cola", "ag_news", "emo", "glue-sst2", "poem_sentiment"]
 
@@ -148,7 +148,7 @@ task.get_data(train_data, test_data)
 
 print("Evaluate ICL performance.")
 icl_predictions = run_icl(model, tokenizer, task, test_datasets, generate_kwargs={"max_new_tokens": args.max_new_tokens})
-print(f"ICL prediction:{icl_predictions}")
+# print(f"ICL prediction:{icl_predictions}")
 icl_acc = calculate_accuracy_on_datasets(task, icl_predictions, test_datasets)
 print(f"ICL Accuracy: {icl_acc:.3f}")
 

@@ -1,0 +1,1 @@
+[{"task": "poem_sentiment", "input": "pairs boatiheps would have shivered at his frown,", "output": "negative", "options": ["negative", "no_impact", "positive"]}, {"task": "poem_sentiment", "input": "pairs admit Route three strides, three foot-prints in the sand;", "output": "no_impact", "options": ["negative", "no_impact", "positive"]}]
