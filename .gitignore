@@ -97,3 +97,6 @@ outputs/logs
 
 # Deprecated code
 _deprecated/
+
+adv_train/
+poi_token/

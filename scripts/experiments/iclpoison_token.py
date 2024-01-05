@@ -113,7 +113,7 @@ def normalized_tv(model, tokenizer, task, data):
                 tokenizer,
                 task,
                 data)
-    print(f"tv:{tv}")
+    # print(f"tv:{tv}")
     tv_l2 = torch.norm(tv, p=2, dim=2, keepdim=True)
     tv_normal = tv/tv_l2
     return tv_normal
