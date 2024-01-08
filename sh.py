@@ -133,6 +133,40 @@ python -u scripts/experiments/iclpoison_token.py --task_name glue-sst2 --dataset
 python -u scripts/experiments/iclpoison_token.py --task_name emo --dataset emo --model_type vicuna --model_variant 7B --budget 3 --num_cand 100 > logs/iclpoison_token/emo_b3_vicuna7B.log 2>&1
 python -u scripts/experiments/iclpoison_token.py --task_name  ag_news --dataset ag_news --model_type vicuna --model_variant 7B --budget 3 --num_cand 100 > logs/iclpoison_token/ag_b3_vicuna7B.log 2>&1
 
+#poison with word change
+### llama-7B
+python -u scripts/experiments/iclpoison_word.py --task_name poem_sentiment --dataset poem_sentiment --model_type llama --model_variant 7B --budget 3 --num_cand 50 > logs/iclpoison_word/poem_b3_llama7B.log 2>&1
+python -u scripts/experiments/iclpoison_word.py --task_name glue-cola --dataset glue-cola --model_type llama --model_variant 7B --budget 3 --num_cand 50 > logs/iclpoison_word/cola_b3_llama7B.log 2>&1
+python -u scripts/experiments/iclpoison_word.py --task_name glue-sst2 --dataset glue-sst2 --model_type llama --model_variant 7B --budget 3 --num_cand 50 > logs/iclpoison_word/sst2_b3_llama7B.log 2>&1
+python -u scripts/experiments/iclpoison_word.py --task_name emo --dataset emo --model_type llama --model_variant 7B --budget 3 --num_cand 50 > logs/iclpoison_word/emo_b3_llama7B.log 2>&1
+python -u scripts/experiments/iclpoison_word.py --task_name  ag_news --dataset ag_news --model_type llama --model_variant 7B --budget 3 --num_cand 50 > logs/iclpoison_word/ag_b3_llama7B.log 2>&1
+
+
+#poison with word change, min loss 
+### llama-7B
+python -u scripts/experiments/iclpoison_word_min.py --task_name poem_sentiment --dataset poem_sentiment --model_type llama --model_variant 7B --budget 3 --num_cand 100 > logs/iclpoison_word_min/poem_b3_llama7B.log 2>&1
+python -u scripts/experiments/iclpoison_word_min.py --task_name glue-cola --dataset glue-cola --model_type llama --model_variant 7B --budget 3 --num_cand 100 > logs/iclpoison_word_min/cola_b3_llama7B.log 2>&1
+python -u scripts/experiments/iclpoison_word_min.py --task_name glue-sst2 --dataset glue-sst2 --model_type llama --model_variant 7B --budget 3 --num_cand 100 > logs/iclpoison_word_min/sst2_b3_llama7B.log 2>&1
+python -u scripts/experiments/iclpoison_word_min.py --task_name emo --dataset emo --model_type llama --model_variant 7B --budget 3 --num_cand 100 > logs/iclpoison_word_min/emo_b3_llama7B.log 2>&1
+python -u scripts/experiments/iclpoison_word_min.py --task_name  ag_news --dataset ag_news --model_type llama --model_variant 7B --budget 3 --num_cand 100 > logs/iclpoison_word_min/ag_b3_llama7B.log 2>&1
+
+
+#poison with char change
+### llama-7B
+python -u scripts/experiments/iclpoison_char.py --task_name poem_sentiment --dataset poem_sentiment --model_type llama --model_variant 7B --budget 5 > logs/iclpoison_char/poem_b5_llama7B.log 2>&1
+python -u scripts/experiments/iclpoison_char.py --task_name glue-cola --dataset glue-cola --model_type llama --model_variant 7B --budget 5 > logs/iclpoison_char/cola_b5_llama7B.log 2>&1
+python -u scripts/experiments/iclpoison_char.py --task_name glue-sst2 --dataset glue-sst2 --model_type llama --model_variant 7B --budget 5 > logs/iclpoison_char/sst2_b5_llama7B.log 2>&1
+python -u scripts/experiments/iclpoison_char.py --task_name emo --dataset emo --model_type llama --model_variant 7B --budget 5 > logs/iclpoison_char/emo_b5_llama7B.log 2>&1
+python -u scripts/experiments/iclpoison_char.py --task_name  ag_news --dataset ag_news --model_type llama --model_variant 7B --budget 5 > logs/iclpoison_char/ag_b5_llama7B.log 2>&1
+
+#poison with char change, min loss
+### llama-7B
+python -u scripts/experiments/iclpoison_char_min.py --task_name poem_sentiment --dataset poem_sentiment --model_type llama --model_variant 7B --budget 5 > logs/iclpoison_char_min/poem_b5_llama7B.log 2>&1
+python -u scripts/experiments/iclpoison_char_min.py --task_name glue-cola --dataset glue-cola --model_type llama --model_variant 7B --budget 5 > logs/iclpoison_char_min/cola_b5_llama7B.log 2>&1
+python -u scripts/experiments/iclpoison_char_min.py --task_name glue-sst2 --dataset glue-sst2 --model_type llama --model_variant 7B --budget 5 > logs/iclpoison_char_min/sst2_b5_llama7B.log 2>&1
+python -u scripts/experiments/iclpoison_char_min.py --task_name emo --dataset emo --model_type llama --model_variant 7B --budget 5 > logs/iclpoison_char_min/emo_b5_llama7B.log 2>&1
+python -u scripts/experiments/iclpoison_char_min.py --task_name  ag_news --dataset ag_news --model_type llama --model_variant 7B --budget 5 > logs/iclpoison_char_min/ag_b5_llama7B.log 2>&1
+
 
 
 # poison with adv tokens, all layer
@@ -149,6 +183,26 @@ python -u scripts/experiments/iclpoison_all.py --task_name glue-sst2 --dataset g
 python -u scripts/experiments/iclpoison_all.py --task_name emo --dataset emo --model_type pythia --model_variant 6.9B > logs/icvpoison/token2_all_emo_pythia6.9B.log 2>&1
 python -u scripts/experiments/iclpoison_all.py --task_name ag_news --dataset ag_news --model_type pythia --model_variant 6.9B > logs/icvpoison/token2_all_ag_pythia6.9B.log 2>&1
 ###
+
+# poison with adv tokens, min loss
+### pythia-2.8B
+python -u scripts/experiments/iclpoison_all_min.py --task_name poem_sentiment --dataset poem_sentiment --model_type pythia --model_variant 2.8B > logs/icvpoison_min/poem_pythia2.8B.log 2>&1
+python -u scripts/experiments/iclpoison_all_min.py --task_name glue-cola --dataset glue-cola --model_type pythia --model_variant 2.8B > logs/icvpoison_min/cola_pythia2.8B.log 2>&1
+python -u scripts/experiments/iclpoison_all_min.py --task_name glue-sst2 --dataset glue-sst2 --model_type pythia --model_variant 2.8B > logs/icvpoison_min/sst2_pythia2.8B.log 2>&1
+python -u scripts/experiments/iclpoison_all_min.py --task_name emo --dataset emo --model_type pythia --model_variant 2.8B > logs/icvpoison_min/emo_pythia2.8B.log 2>&1
+python -u scripts/experiments/iclpoison_all_min.py --task_name  ag_news --dataset ag_news --model_type pythia --model_variant 2.8B > logs/icvpoison_min/ag_pythia2.8B.log 2>&1
+### pythia-6.9B
+python -u scripts/experiments/iclpoison_all_min.py --task_name poem_sentiment --dataset poem_sentiment --model_type pythia --model_variant 6.9B > logs/icvpoison_min/poem_pythia6.9B.log 2>&1
+python -u scripts/experiments/iclpoison_all_min.py --task_name glue-cola --dataset glue-cola --model_type pythia --model_variant 6.9B > logs/icvpoison_min/cola_pythia6.9B.log 2>&1
+python -u scripts/experiments/iclpoison_all_min.py --task_name glue-sst2 --dataset glue-sst2 --model_type pythia --model_variant 6.9B > logs/icvpoison_min/sst2_pythia6.9B.log 2>&1
+python -u scripts/experiments/iclpoison_all_min.py --task_name emo --dataset emo --model_type pythia --model_variant 6.9B > logs/icvpoison_min/emo_pythia6.9B.log 2>&1
+python -u scripts/experiments/iclpoison_all_min.py --task_name  ag_news --dataset ag_news --model_type pythia --model_variant 6.9B > logs/icvpoison_min/ag_pythia6.9B.log 2>&1
+### llama-7B
+python -u scripts/experiments/iclpoison_all_min.py --task_name poem_sentiment --dataset poem_sentiment --model_type llama --model_variant 7B > logs/icvpoison_min/poem_llama7B.log 2>&1
+python -u scripts/experiments/iclpoison_all_min.py --task_name glue-cola --dataset glue-cola --model_type llama --model_variant 7B > logs/icvpoison_min/cola_llama7B.log 2>&1
+python -u scripts/experiments/iclpoison_all_min.py --task_name glue-sst2 --dataset glue-sst2 --model_type llama --model_variant 7B > logs/icvpoison_min/sst2_llama7B.log 2>&1
+python -u scripts/experiments/iclpoison_all_min.py --task_name emo --dataset emo --model_type llama --model_variant 7B > logs/icvpoison_min/emo_llama7B.log 2>&1
+python -u scripts/experiments/iclpoison_all_min.py --task_name  ag_news --dataset ag_news --model_type llama --model_variant 7B > logs/icvpoison_min/ag_llama7B.log 2>&1
 
 
 

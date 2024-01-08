@@ -49,6 +49,9 @@ from core.experiments_config import MODELS_TO_EVALUATE, TASKS_TO_EVALUATE
 from core.utils.misc import limit_gpus, seed_everything
 from core.data.datasets.few_shot_dataset import FewShotDataset
 
+from nltk.tokenize import word_tokenize
+import string
+
 # import textattack as tatk # load textattack package for more adversarial attack
 
 
@@ -78,7 +81,8 @@ parser.add_argument("--local_rank", type=int, default=-1, help="local_rank for d
 parser.add_argument("--model_type", type=str, default = 'llama')
 parser.add_argument("--model_variant", type=str, default = '7B')
 
-parser.add_argument("--budget", type=int, default=5, help='number of replaced tokens')
+parser.add_argument("--budget", type=int, default=3, help='number of replaced tokens')
+parser.add_argument("--num_cand", type=int, default=50, help='number of candidates to check')
 
 args = parser.parse_args()
 print('args:', args)
@@ -108,7 +112,11 @@ def transfer_fewshot(
     return fewshot_data
 
 def recombine_tokens(tokens):
-    sentence = ''.join(tokens)
+    sentence = ""
+    for token in tokens:
+        if sentence and not token in string.punctuation:
+            sentence += " "
+        sentence += token
     return sentence
 
 def normalized_tv(model, tokenizer, task, data):
@@ -128,44 +136,39 @@ def diff_l2(tensor1, tensor2): #tensor of size [a,b], if [1,a,b] must squeeze fi
     valid_rows_mask = mask1 & mask2
     valid_tensor1 = tensor1[valid_rows_mask]
     valid_tensor2 = tensor2[valid_rows_mask]
-    change = torch.mean(torch.norm(valid_tensor1 - valid_tensor2, dim=1))
+    l2_norms = (valid_tensor1 - valid_tensor2).norm(dim=1)
+    change = l2_norms.min()
     return change
 
-#define characters
-alphabets = list(string.ascii_uppercase) + list(string.ascii_lowercase)
-digits = list(string.digits)
-punctuation = list(string.punctuation)
-whitespace = [' ']
-all_chars = alphabets + digits +punctuation + whitespace
-
 def evaluate_importance(inputs, model, tokenizer, baseline_output):#inputs is fewshot class, baseline_output is the hidden state of original fewshot data
-    original_chars = list(inputs[0].train_inputs) #list of splited words
-    print(f"original_chars:{original_chars}")
+    original_words = word_tokenize(inputs[0].train_inputs) #list of splited words
+    print(f"original_words:{original_words}")
 
-    # Store the importance of each char
-    char_importance = []
+    # Store the importance of each word
+    word_importance = []
 
     # Evaluate the importance of each word
-    for i in range(len(original_chars)):
-        if original_chars[i] in punctuation or original_chars[i] in whitespace:
-            char_importance.append((i,0))
-        perturbed_input = copy.deepcopy(inputs)
-        # Create a copy of the original input IDs
-        perturbed_chars = copy.deepcopy(original_chars)
+    for i in range(len(original_words)):
+        if original_words[i] in string.punctuation or original_words[i] not in glove_model:
+            word_importance.append((i,0))
+        else:
+            perturbed_input = copy.deepcopy(inputs)
+            # Create a copy of the original input IDs
+            perturbed_words = copy.deepcopy(original_words)
         
-        # Remove the word
-        perturbed_chars = perturbed_chars[:i] + perturbed_chars[i+1:]
-        perturbed_text = recombine_tokens(perturbed_chars)
-        perturbed_input[0].train_inputs = perturbed_text
+            # Remove the word
+            perturbed_words = perturbed_words[:i] + perturbed_words[i+1:]
+            perturbed_text = recombine_tokens(perturbed_words)
+            perturbed_input[0].train_inputs = perturbed_text
         
-        # Evaluate the model with the perturbed input
-        perturbed_tv_normal = normalized_tv(model, tokenizer, task, perturbed_input)
+            # Evaluate the model with the perturbed input
+            perturbed_tv_normal = normalized_tv(model, tokenizer, task, perturbed_input)
         
-        # Calculate the change in output
-        change = diff_l2(baseline_output.squeeze(0), perturbed_tv_normal.squeeze(0))
-        char_importance.append((i,change.item()))
+            # Calculate the change in output
+            change = diff_l2(baseline_output.squeeze(0), perturbed_tv_normal.squeeze(0))
+            word_importance.append((i,change.item()))
 
-    return char_importance
+    return word_importance
 
 def top_k_indices(lst, k):
     if len(lst) <= k:
@@ -175,6 +178,54 @@ def top_k_indices(lst, k):
     top_k = [index for index, value in sorted_lst[:k]]
 
     return top_k
+
+
+def find_most_similar_words(word, model, top_k, batch_size=1000):
+    from scipy.spatial.distance import cosine
+    
+    if word not in model:
+        print(f"'{word}' is not in the GloVe vocabulary.")
+        return []
+    target_embedding = model[word]
+    all_words = list(model.keys())
+    print(f"all_words shape:{len(all_words)}")
+    nearest_neighbors = {}
+    
+    for i in range(0, len(all_words), batch_size):
+        batch_words = all_words[i:min(i + batch_size,len(all_words))]
+        batch_embeddings = np.array([model[w] for w in batch_words])
+
+        similarities = [1 - cosine(target_embedding, embedding) for embedding in batch_embeddings]
+        
+        for word, distance in zip(batch_words, similarities):
+            nearest_neighbors[word] = distance
+
+    sorted_neighbors = sorted(nearest_neighbors, key=nearest_neighbors.get, reverse=True)
+    return sorted_neighbors[1:top_k+1]
+
+# loaad GLOVE word embeddings
+GLOVE_PATH = '/data1/pengfei/glove.840B.300d.txt'
+glove_model = {}
+with open(GLOVE_PATH, 'r', encoding='utf-8') as file:
+    for line in file:
+        values = line.strip().split(' ')
+        word = values[0]
+        vector = np.array(values[1:], dtype=np.float32)
+        if vector.shape[0] == 300:
+                glove_model[word] = vector
+        # glove_model[word] = vector
+# f = open(GLOVE_PATH,'r')
+# for line in f:
+#     row = line.strip().split(' ')
+#     word = row[0]
+#     #print(word)
+#     embedding = np.array([float(val) for val in row[1:]])
+#     glove_model[word] = embedding
+print(f"GLOVE embeddings loaded.")
+# print(f"len of glove_model:{len(glove_model)}")
+# print(f"embedding:{glove_model['frog']}")
+# print(f"embedding shape:{glove_model['frog'].shape}")
+# input(111)
 
 
 print(f"Loading model and tokenizer {args.model_type, args.model_variant}")
@@ -218,10 +269,10 @@ print('Poisoning...')
 example_dummy = dev_data[0]
 adv_train_data = []
 train_n = len(train_data)
-poison_id = random.sample(list(range(train_n)), 20)
+poison_id = random.sample(list(range(train_n)), 10)
 for i in poison_id:
     print(f"Sample:{i}")
-    #Stage 1:compute character influence score
+    #Stage 1:compute word influence score
     example_tr = train_data[i]
     fewshot_datas = [FewShotDataset(
         example_tr['input'],
@@ -229,28 +280,33 @@ for i in poison_id:
         example_dummy['input'],
         example_dummy['output']
     )]
-    # print(f"original input:{example_tr['input']}")
+    print(f"original input:{example_tr['input']}")
     tv_o_normal = normalized_tv(model, tokenizer,task,fewshot_datas).squeeze(0)
     
     importance_score = evaluate_importance(fewshot_datas, model, tokenizer, tv_o_normal)
-    print(f"importance_score:{importance_score}")
-    # input(111)
-    char_to_perturb = top_k_indices(importance_score, args.budget)
-    # char_to_perturb = [1,2]
+    # # print(f"importance_score:{importance_score}")
+    # # input(111)
+    word_to_perturb = top_k_indices(importance_score, args.budget)
+    # word_to_perturb = [1,2]
     
     #Stage 2: replace these words with nearby words
-    original_char = list(fewshot_datas[0].train_inputs) #list size [char_num]
-    print(f"original_word:{original_char}")
-    for idx in char_to_perturb:
-        ###traverse all characters and find one with most loss increase
+    original_word = word_tokenize(fewshot_datas[0].train_inputs) #list size [word_num]
+    print(f"original_word:{original_word}")
+    for idx in word_to_perturb:
+        ###first find out the closest words as candidates
+        word_to_replace = original_word[idx]
+        print(f"word_to_replace:{word_to_replace}")
+        candidate_words = find_most_similar_words(word_to_replace, glove_model, args.num_cand, batch_size=1000) #list size args.num_cand
+        print(f"candidate_words:{candidate_words}")
+        ###traverse candidates and find one with most loss increase
         tv_changes = []
-        for cand in alphabets:
-            print(f"char_cand:{cand}")
-            perturb_char = copy.deepcopy(original_char) #list size [token_num]
+        for cand in candidate_words:
+            print(f"word_cand:{cand}")
+            perturb_word = copy.deepcopy(original_word) #list size [token_num]
             perturb_data = copy.deepcopy(fewshot_datas) #FewShot object
-            perturb_char[idx] = cand
-            perturb_text = recombine_tokens(perturb_char) #string
-            print(f"perturb_text:{perturb_text}")
+            perturb_word[idx] = cand
+            perturb_text = recombine_tokens(perturb_word) #string
+            # print(f"perturb_text:{perturb_text}")
             perturb_data[0].train_inputs = perturb_text
             perturbed_tv_normal = normalized_tv(model, tokenizer, task, perturb_data)
             # print(f"perturbed_tv_normal:{perturbed_tv_normal}")
@@ -258,20 +314,21 @@ for i in poison_id:
             change = diff_l2(tv_o_normal.squeeze(0), perturbed_tv_normal.squeeze(0))
             print(f"change:{change}")
             tv_changes.append((cand, change.item()))
+            # input(111)
         #sort the changes in descending order
         sorted_changes = sorted(tv_changes, key=lambda x: x[1], reverse=True)
-        selected_char = sorted_changes[0][0]
+        selected_word = sorted_changes[0][0]
         #replace the original token with selected token
-        original_char[idx] = selected_char
+        original_word[idx] = selected_word
     #decode the perturbed token sequences
-    perturbed_text = recombine_tokens(original_char)
+    perturbed_text = recombine_tokens(original_word)
     print(f"perturbed_text:{perturbed_text}")
     example_tr['input'] = perturbed_text
     adv_train_data.append(example_tr)
 
 
 print('Saving...')
-savedir = '/home/pengfei/Documents/icl_task_vectors/poi_char/'+args.task_name
+savedir = '/home/pengfei/Documents/icl_task_vectors/poi_word_min/'+args.task_name
 if not os.path.exists(savedir):
     os.makedirs(savedir)
 filename = args.model_type+args.model_variant+'+_B'+str(args.budget)

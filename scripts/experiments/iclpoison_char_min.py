@@ -128,7 +128,8 @@ def diff_l2(tensor1, tensor2): #tensor of size [a,b], if [1,a,b] must squeeze fi
     valid_rows_mask = mask1 & mask2
     valid_tensor1 = tensor1[valid_rows_mask]
     valid_tensor2 = tensor2[valid_rows_mask]
-    change = torch.mean(torch.norm(valid_tensor1 - valid_tensor2, dim=1))
+    l2_norms = (valid_tensor1 - valid_tensor2).norm(dim=1)
+    change = l2_norms.min()
     return change
 
 #define characters
@@ -271,7 +272,7 @@ for i in poison_id:
 
 
 print('Saving...')
-savedir = '/home/pengfei/Documents/icl_task_vectors/poi_char/'+args.task_name
+savedir = '/home/pengfei/Documents/icl_task_vectors/poi_char_min/'+args.task_name
 if not os.path.exists(savedir):
     os.makedirs(savedir)
 filename = args.model_type+args.model_variant+'+_B'+str(args.budget)
