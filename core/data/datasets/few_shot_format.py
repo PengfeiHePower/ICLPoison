@@ -35,11 +35,9 @@ class FewShotFormat:
             base_prompt += f"{self.task_description}{self.example_separator}"
 
         if len(dataset.train_inputs) > 0:
-            # train_examples = [
-            #     self.format_train_example(x, y) for x, y in zip(dataset.train_inputs, dataset.train_outputs)
-            # ] #modified
             train_examples = [
-                self.format_train_example(dataset.train_inputs, dataset.train_outputs)]
+                self.format_train_example(x, y) for x, y in zip(dataset.train_inputs, dataset.train_outputs)
+            ]
             train_examples_prompt = self.example_separator.join(train_examples)
             train_examples_prompt += self.example_separator
         else:

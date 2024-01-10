@@ -18,6 +18,12 @@ python -u scripts/experiments/icleval.py --task_name emo --dataset emo --model_t
 python -u scripts/experiments/icleval.py --task_name glue-sst2 --dataset glue-sst2 --model_type llama --model_variant 7B > logs/cleanEval/sst2_llama7B.log 2>&1
 python -u scripts/experiments/icleval.py --task_name poem_sentiment --dataset poem_sentiment --model_type llama --model_variant 7B > logs/cleanEval/poem_llama7B.log 2>&1
 python -u scripts/experiments/icleval.py --task_name ag_news --dataset ag_news --model_type llama --model_variant 7B > logs/cleanEval/ag_llama7B.log 2>&1
+### llama2-13B
+python -u scripts/experiments/icleval.py --task_name glue-cola --dataset glue-cola --model_type llama --model_variant 13B > logs/cleanEval/cola_llama13B.log 2>&1
+python -u scripts/experiments/icleval.py --task_name emo --dataset emo --model_type llama --model_variant 13B > logs/cleanEval/emo_llama13B.log 2>&1
+python -u scripts/experiments/icleval.py --task_name glue-sst2 --dataset glue-sst2 --model_type llama --model_variant 13B > logs/cleanEval/sst2_llama13B.log 2>&1
+python -u scripts/experiments/icleval.py --task_name poem_sentiment --dataset poem_sentiment --model_type llama --model_variant 13B > logs/cleanEval/poem_llama13B.log 2>&1
+python -u scripts/experiments/icleval.py --task_name ag_news --dataset ag_news --model_type llama --model_variant 13B > logs/cleanEval/ag_llama13B.log 2>&1
 ### falcon-7B
 python -u scripts/experiments/icleval.py --task_name glue-cola --dataset glue-cola --model_type falcon --model_variant 7B > logs/cleanEval/cola_falcon7B.log 2>&1
 python -u scripts/experiments/icleval.py --task_name emo --dataset emo --model_type falcon --model_variant 7B > logs/cleanEval/emo_falcon7B.log 2>&1
@@ -206,9 +212,19 @@ python -u scripts/experiments/iclpoison_all_min.py --task_name  ag_news --datase
 
 
 
-
-
-
+# clean eval on GPT
+### gpt-3.5
+python -u scripts/experiments/icleval_gpt.py --task_name glue-cola --dataset glue-cola --model gpt3 > logs/cleanEval/cola_gpt3.log 2>&1
+python -u scripts/experiments/icleval_gpt.py --task_name glue-sst2 --dataset glue-sst2 --model gpt3 > logs/cleanEval/sst2_gpt3.log 2>&1
+python -u scripts/experiments/icleval_gpt.py --task_name emo --dataset emo --model gpt3 > logs/cleanEval/emo_gpt3.log 2>&1
+python -u scripts/experiments/icleval_gpt.py --task_name poem_sentiment --dataset poem_sentiment --model gpt3 > logs/cleanEval/poem_gpt3.log 2>&1
+python -u scripts/experiments/icleval_gpt.py --task_name ag_news --dataset ag_news --model gpt3 > logs/cleanEval/ag_gpt3.log 2>&1
+### gpt-4
+python -u scripts/experiments/icleval_gpt.py --task_name glue-cola --dataset glue-cola --model gpt4 > logs/cleanEval/cola_gpt4.log 2>&1
+python -u scripts/experiments/icleval_gpt.py --task_name glue-sst2 --dataset glue-sst2 --model gpt4 > logs/cleanEval/sst2_gpt4.log 2>&1
+python -u scripts/experiments/icleval_gpt.py --task_name emo --dataset emo --model gpt4 > logs/cleanEval/emo_gpt4.log 2>&1
+python -u scripts/experiments/icleval_gpt.py --task_name poem_sentiment --dataset poem_sentiment --model gpt4 > logs/cleanEval/poem_gpt4.log 2>&1
+python -u scripts/experiments/icleval_gpt.py --task_name ag_news--dataset ag_news --model gpt4 > logs/cleanEval/ag_gpt4.log 2>&1
 
 
 # poison script, best layer

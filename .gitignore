@@ -100,3 +100,10 @@ _deprecated/
 
 adv_train/
 poi_token/
+poi_char/
+poi_char_min/
+poi_word/
+poi_word_min/
+poi_suffix_min/
+
+sh.py
