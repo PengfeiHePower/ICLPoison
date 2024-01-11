@@ -73,9 +73,6 @@ parser.add_argument("--local_rank", type=int, default=-1, help="local_rank for d
 
 parser.add_argument("--model", type=str, default = 'gpt3')
 
-parser.add_argument("--clean", type=bool, default=True)
-parser.add_argument("--adv_trainpath", type=str, default=None)
-
 args = parser.parse_args()
 print('args:', args)
 
@@ -87,12 +84,13 @@ def transfer_fewshot(
     ) -> List[FewShotDataset]:
     fewshot_data = []
     train_n = len(train_data)
+    outputs = train_data[0]['options']
     for i in range(len(test_data)):
         test_dict = test_data[i]
         demo_id = random.sample(list(range(train_n)), fewshot_sample) # randomly select demos from the training data
         demos = [train_data[ids] for ids in demo_id]
         train_inputs = [x["input"] for x in demos]
-        train_outputs = [x["output"] for x in demos]
+        train_outputs = random.choices(outputs, k=fewshot_sample)
         test_input = test_dict["input"]
         test_output = test_dict["output"]
         fewshot_data.append(FewShotDataset(
@@ -115,17 +113,9 @@ tokenizer = None
 print(f"Evalauet on task: {args.task_name}")
 # dataset = task_name
 #load data
-if args.clean == True:
-        train_data = load_data(split = "train", k = args.k, seed = args.seed, 
-               datasets = None if args.dataset is None else args.task_name.split(","), 
-                           data_dir = args.data_dir)
-else:
-        if args.adv_trainpath == None:
-                print('Adv training path should not be empty!')
-                exit(0)
-        else:
-                with open(args.adv_trainpath, 'r') as file:
-                        train_data = json.load(file)
+train_data = load_data(split = "train", k = args.k, seed = args.seed, 
+        datasets = None if args.dataset is None else args.task_name.split(","), 
+                data_dir = args.data_dir)
 test_data = load_data(split = "test", k = args.k, seed = args.seed, 
         datasets = None if args.dataset is None else args.task_name.split(","),
         data_dir = args.data_dir)
@@ -136,6 +126,7 @@ for seed in [13, 21, 42, 87, 100]:
                 data_dir = args.data_dir)
     
 print('Dataset loaded.')
+
 test_datasets = transfer_fewshot(train_data, test_data, 5)
 dev_datasets = transfer_fewshot(train_data, dev_data, 5)
 print('Few-shot datasests prepared.')

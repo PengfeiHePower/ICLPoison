@@ -45,7 +45,6 @@ from core.task_vectors import run_icl, run_task_vector, run_task_vector_noise1, 
 from core.experiments_config import MODELS_TO_EVALUATE, TASKS_TO_EVALUATE
 from core.utils.misc import limit_gpus, seed_everything
 from core.data.datasets.few_shot_dataset import FewShotDataset
-from core.data.datasets.few_shot_format import FewShotFormat
 
 
 parser = argparse.ArgumentParser()
@@ -71,7 +70,8 @@ parser.add_argument("--max_new_tokens", type=int, default=10)
 
 parser.add_argument("--local_rank", type=int, default=-1, help="local_rank for distributed training on gpus")
 
-parser.add_argument("--model", type=str, default = 'gpt3')
+parser.add_argument("--model_type", type=str, default = 'pythia')
+parser.add_argument("--model_variant", type=str, default = '2.8B')
 
 parser.add_argument("--clean", type=bool, default=True)
 parser.add_argument("--adv_trainpath", type=str, default=None)
@@ -87,12 +87,13 @@ def transfer_fewshot(
     ) -> List[FewShotDataset]:
     fewshot_data = []
     train_n = len(train_data)
+    outputs = train_data[0]['options']
     for i in range(len(test_data)):
         test_dict = test_data[i]
         demo_id = random.sample(list(range(train_n)), fewshot_sample) # randomly select demos from the training data
         demos = [train_data[ids] for ids in demo_id]
         train_inputs = [x["input"] for x in demos]
-        train_outputs = [x["output"] for x in demos]
+        train_outputs = random.choices(outputs, k=fewshot_sample)
         test_input = test_dict["input"]
         test_output = test_dict["output"]
         fewshot_data.append(FewShotDataset(
@@ -103,11 +104,11 @@ def transfer_fewshot(
         ))
     return fewshot_data
 
-if args.model == 'gpt3':
-        model = 'gpt-3.5-turbo'
-elif args.model == 'gpt4':
-        model = 'gpt-4'
-tokenizer = None
+print(f"Loading model and tokenizer {args.model_type, args.model_variant}")
+model_type = args.model_type
+model_variant = args.model_variant
+model, tokenizer = load_model_and_tokenizer(model_type, model_variant)
+print("Loaded model and tokenizer.")
 
 # tasks = ["glue-cola", "ag_news", "emo", "glue-sst2", "poem_sentiment"]
 
@@ -136,6 +137,7 @@ for seed in [13, 21, 42, 87, 100]:
                 data_dir = args.data_dir)
     
 print('Dataset loaded.')
+
 test_datasets = transfer_fewshot(train_data, test_data, 5)
 dev_datasets = transfer_fewshot(train_data, dev_data, 5)
 print('Few-shot datasests prepared.')
@@ -146,29 +148,23 @@ task.get_data(train_data, test_data)
 
 
 print("Evaluate ICL performance.")
-format_dataset_kwargs = {"include_train": True}
-few_shot_format = FewShotFormat()
-prompts = few_shot_format.format_datasets(test_datasets, **format_dataset_kwargs)
-# print(f"prompts:{prompts}")
-print(f"prompts len:{len(prompts)}")
-
-from openai import OpenAI
-client = OpenAI()
-n_test = len(prompts)
-correct = 0
-system_prompt = "You are a helpful assistant, skilled in completing the example."
-for i in range(n_test):
-        output_gt = test_datasets[i].test_output
-        completion = client.chat.completions.create(
-        model=model,
-        messages=[
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": prompts[i]}
-        ]
-        )
-        response = completion.choices[0].message
-        output_pred = response.content
-        correct += (output_pred == output_gt)
-        time.sleep(2)
-icl_acc = correct/n_test
+icl_predictions = run_icl(model, tokenizer, task, test_datasets, generate_kwargs={"max_new_tokens": args.max_new_tokens})
+icl_acc = calculate_accuracy_on_datasets(task, icl_predictions, test_datasets)
 print(f"ICL Accuracy: {icl_acc:.3f}")
+exit(0)
+
+
+print("Evaluate task vector Acc.")
+tv_predictions, tv_dev_accuracy_by_layer, task_hiddens = run_task_vector(
+        model,
+        tokenizer,
+        task,
+        test_datasets,
+        dev_datasets,
+)
+tv_acc = calculate_accuracy_on_datasets(task, tv_predictions, test_datasets)
+best_intermediate_layer = int(max(tv_dev_accuracy_by_layer, key=tv_dev_accuracy_by_layer.get))
+    
+
+print(f"Task Vector Accuracy: {tv_acc:.3f}")
+print(f"Best layer: {best_intermediate_layer:d}")

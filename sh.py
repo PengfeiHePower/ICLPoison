@@ -218,13 +218,28 @@ python -u scripts/experiments/icleval_gpt.py --task_name glue-cola --dataset glu
 python -u scripts/experiments/icleval_gpt.py --task_name glue-sst2 --dataset glue-sst2 --model gpt3 > logs/cleanEval/sst2_gpt3.log 2>&1
 python -u scripts/experiments/icleval_gpt.py --task_name emo --dataset emo --model gpt3 > logs/cleanEval/emo_gpt3.log 2>&1
 python -u scripts/experiments/icleval_gpt.py --task_name poem_sentiment --dataset poem_sentiment --model gpt3 > logs/cleanEval/poem_gpt3.log 2>&1
-python -u scripts/experiments/icleval_gpt.py --task_name ag_news --dataset ag_news --model gpt3 > logs/cleanEval/ag_gpt3.log 2>&1
+python -u scripts/experiments/icleval_gpt.py --task_name ag_news --dataset ag_news --model gpt3 > logs/cleanEval/ag_gpt3.log 2>&1  # beyond rate limit
 ### gpt-4
 python -u scripts/experiments/icleval_gpt.py --task_name glue-cola --dataset glue-cola --model gpt4 > logs/cleanEval/cola_gpt4.log 2>&1
 python -u scripts/experiments/icleval_gpt.py --task_name glue-sst2 --dataset glue-sst2 --model gpt4 > logs/cleanEval/sst2_gpt4.log 2>&1
 python -u scripts/experiments/icleval_gpt.py --task_name emo --dataset emo --model gpt4 > logs/cleanEval/emo_gpt4.log 2>&1
 python -u scripts/experiments/icleval_gpt.py --task_name poem_sentiment --dataset poem_sentiment --model gpt4 > logs/cleanEval/poem_gpt4.log 2>&1
 python -u scripts/experiments/icleval_gpt.py --task_name ag_news--dataset ag_news --model gpt4 > logs/cleanEval/ag_gpt4.log 2>&1
+
+# label flip on GPT
+### gpt-3.5
+python -u scripts/experiments/iclpoison_flip_gpt.py --task_name glue-cola --dataset glue-cola --model gpt3 > logs/iclflip/cola_gpt3.log 2>&1
+python -u scripts/experiments/iclpoison_flip_gpt.py --task_name glue-sst2 --dataset glue-sst2 --model gpt3 > logs/iclflip/sst2_gpt3.log 2>&1
+python -u scripts/experiments/iclpoison_flip_gpt.py --task_name emo --dataset emo --model gpt3 > logs/iclflip/emo_gpt3.log 2>&1
+python -u scripts/experiments/iclpoison_flip_gpt.py --task_name poem_sentiment --dataset poem_sentiment --model gpt3 > logs/iclflip/poem_gpt3.log 2>&1
+python -u scripts/experiments/iclpoison_flip_gpt.py --task_name ag_news --dataset ag_news --model gpt3 > logs/iclflip/ag_gpt3.log 2>&1  # beyond rate limit
+### gpt-4
+python -u scripts/experiments/iclpoison_flip_gpt.py --task_name glue-cola --dataset glue-cola --model gpt4 > logs/iclflip/cola_gpt4.log 2>&1
+python -u scripts/experiments/iclpoison_flip_gpt.py --task_name glue-sst2 --dataset glue-sst2 --model gpt4 > logs/iclflip/sst2_gpt4.log 2>&1
+python -u scripts/experiments/iclpoison_flip_gpt.py --task_name emo --dataset emo --model gpt4 > logs/iclflip/emo_gpt4.log 2>&1
+python -u scripts/experiments/iclpoison_flip_gpt.py --task_name poem_sentiment --dataset poem_sentiment --model gpt4 > logs/iclflip/poem_gpt4.log 2>&1
+python -u scripts/experiments/iclpoison_flip_gpt.py --task_name ag_news--dataset ag_news --model gpt4 > logs/iclflip/ag_gpt4.log 2>&1
+
 
 
 # poison script, best layer
