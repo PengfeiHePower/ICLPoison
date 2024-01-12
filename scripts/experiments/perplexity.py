@@ -26,6 +26,7 @@ class PerplexityFilter:
         self.window_threshold = threshold
         self.window_size = window_size
         self.cn_loss = torch.nn.CrossEntropyLoss(reduction='none')
+        self.device = self.model.device
     
     def get_log_perplexity(self, sequence):
         """
@@ -35,7 +36,7 @@ class PerplexityFilter:
         ----------
         sequence : str
         """
-        input_ids = self.tokenizer.encode(sequence, return_tensors='pt').cuda()
+        input_ids = self.tokenizer.encode(sequence, return_tensors='pt').to(self.device)
         with torch.no_grad():   
             loss = self.model(input_ids, labels=input_ids).loss
         return loss.item()
@@ -51,7 +52,7 @@ class PerplexityFilter:
         all_loss = []
         cal_log_prob = []
         for sequence in sequences:
-            input_ids = self.tokenizer.encode(sequence, return_tensors='pt').cuda()
+            input_ids = self.tokenizer.encode(sequence, return_tensors='pt').to(self.device)
             with torch.no_grad():   
                 output = self.model(input_ids, labels=input_ids)
                 loss = output.loss
@@ -69,12 +70,29 @@ class PerplexityFilter:
         """
         all_loss = []
         for sequence in sequences:
-            input_ids = self.tokenizer.encode(sequence, return_tensors='pt').cuda()
+            input_ids = self.tokenizer.encode(sequence, return_tensors='pt').cto(self.device)
             with torch.no_grad():   
                 loss = self.model(input_ids, labels=input_ids).loss
             all_loss.append(loss.item())
         
         return max(all_loss)
+    
+    def get_avg_win_log_ppl_of_goals(self, sequences):
+        """
+        Get the log perplexity of a sequence.
+
+        Parameters
+        ----------
+        sequence : str
+        """
+        all_loss = []
+        for sequence in sequences:
+            input_ids = self.tokenizer.encode(sequence, return_tensors='pt').to(self.device)
+            with torch.no_grad():   
+                loss = self.model(input_ids, labels=input_ids).loss
+            all_loss.append(loss.item())
+        
+        return sum(all_loss)/len(all_loss)
     
     def get_log_prob(self, sequence):
         """
@@ -84,7 +102,7 @@ class PerplexityFilter:
         ----------
         sequence : str
         """
-        input_ids = self.tokenizer.encode(sequence, return_tensors='pt').cuda()
+        input_ids = self.tokenizer.encode(sequence, return_tensors='pt').to(self.device)
         with torch.no_grad():
             logits = self.model(input_ids, labels=input_ids).logits
         logits = logits[:, :-1, :].contiguous()
