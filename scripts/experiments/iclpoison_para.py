@@ -73,7 +73,7 @@ parser.add_argument("--local_rank", type=int, default=-1, help="local_rank for d
 parser.add_argument("--model_type", type=str, default = 'pythia')
 parser.add_argument("--model_variant", type=str, default = '2.8B')
 
-parser.add_argument("--clean", type=bool, default=True)
+parser.add_argument("--clean", action="store_true", help="Disable the clean action (enabled by default)")
 parser.add_argument("--adv_trainpath", type=str, default=None)
 
 args = parser.parse_args()
