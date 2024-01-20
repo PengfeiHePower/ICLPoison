@@ -145,26 +145,3 @@ print('Few-shot datasests prepared.')
 
 task = get_task_by_name(tokenizer=tokenizer, task_name=args.task_name)
 task.get_data(train_data, test_data)
-
-
-print("Evaluate ICL performance.")
-icl_predictions = run_icl(model, tokenizer, task, test_datasets, generate_kwargs={"max_new_tokens": args.max_new_tokens})
-icl_acc = calculate_accuracy_on_datasets(task, icl_predictions, test_datasets)
-print(f"ICL Accuracy: {icl_acc:.3f}")
-exit(0)
-
-
-print("Evaluate task vector Acc.")
-tv_predictions, tv_dev_accuracy_by_layer, task_hiddens = run_task_vector(
-        model,
-        tokenizer,
-        task,
-        test_datasets,
-        dev_datasets,
-)
-tv_acc = calculate_accuracy_on_datasets(task, tv_predictions, test_datasets)
-best_intermediate_layer = int(max(tv_dev_accuracy_by_layer, key=tv_dev_accuracy_by_layer.get))
-    
-
-print(f"Task Vector Accuracy: {tv_acc:.3f}")
-print(f"Best layer: {best_intermediate_layer:d}")
