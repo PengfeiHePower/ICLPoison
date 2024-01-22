@@ -107,3 +107,7 @@ poi_word_min/
 poi_suffix_min/
 
 sh.py
+
+format_sbatch/
+para_data/
+para_sbatch

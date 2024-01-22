@@ -6,6 +6,7 @@ from transformers.modeling_outputs import CausalLMOutputWithPast
 
 from core.analysis.evaluation import calculate_accuracy_on_datasets
 from core.data.datasets.few_shot_dataset import FewShotDataset
+from core.data.datasets.few_shot_format import FewShotFormat
 from core.data.tasks.task import Task
 from core.models.context_managers.forward_modifiers.hidden_injector import HiddenInjector
 from core.models.utils.inference import (
@@ -28,10 +29,11 @@ def run_icl(
     task: Task,
     test_datasets: List[FewShotDataset],
     include_train: bool = True,
-    generate_kwargs={"max_new_tokens": 10}
+    generate_kwargs={"max_new_tokens": 10},
+    few_shot_format=FewShotFormat()
 ) -> List[str]:
     format_dataset_kwargs = {"include_train": include_train}
-    inputs = tokenize_datasets_icl(tokenizer, test_datasets, format_dataset_kwargs=format_dataset_kwargs)
+    inputs = tokenize_datasets_icl(tokenizer, test_datasets, few_shot_format=few_shot_format, format_dataset_kwargs=format_dataset_kwargs)
     
     new_ids = batch_generate(model, tokenizer, inputs=inputs, generate_kwargs=generate_kwargs, batch_size=1)
     predictions = decode_predictions(new_ids, tokenizer)
