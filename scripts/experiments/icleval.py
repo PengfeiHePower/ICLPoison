@@ -5,7 +5,7 @@ load_dotenv(".env")
 import os
 def limit_gpus(gpu_ids):
     os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(map(str, gpu_ids))
-limit_gpus(range(1, 8)) # set GPUs used
+limit_gpus(range(2)) # set GPUs used
 
 import sys
 import argparse
@@ -85,8 +85,8 @@ print('args:', args)
 
 # prepare few-shot data
 def transfer_fewshot(
-    train_data : List[dict], 
-    test_data : List[dict], 
+    train_data : List[dict],
+    test_data : List[dict],
     fewshot_sample: int = 5
     ) -> List[FewShotDataset]:
     fewshot_data = []
