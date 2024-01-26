@@ -218,7 +218,6 @@ def decode_predictions(
     output_ids: torch.Tensor, tokenizer: PreTrainedTokenizer, few_shot_format: FewShotFormat = FewShotFormat()
 ) -> List[str]:
     new_tokens = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
-    print(f"new_tokens:{new_tokens}")
     answers = [tokens.split(few_shot_format.example_separator)[0] for tokens in new_tokens]
     return answers
 
@@ -248,6 +247,7 @@ def tokenize_datasets_icl(
     format_dataset_kwargs: Optional[dict] = {},
 ) -> torch.Tensor:
     prompts = few_shot_format.format_datasets(datasets, **format_dataset_kwargs)
+    print(f"prompts:{prompts}")
     return tokenize_prompts_icl(tokenizer, prompts)
 
 

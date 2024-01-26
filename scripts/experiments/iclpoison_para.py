@@ -59,7 +59,7 @@ parser.add_argument("--log_dir", default='clean_eval_icl/logs', type=str)
 parser.add_argument("--dataset", type=str, default='glue-cola')
 # parser.add_argument("--tasktype", type=str, default=None)
 parser.add_argument("--num_exm", type=int, default=4)
-parser.add_argument("--data_dir", type=str, default="/data1/pengfei/data/")
+parser.add_argument("--data_dir", type=str, default="/home/p/p-he/data")
 parser.add_argument("--k", type=int, default=16384)
 parser.add_argument("--seed", type=int, default=100)
 
@@ -70,10 +70,10 @@ parser.add_argument("--max_new_tokens", type=int, default=10)
 
 parser.add_argument("--local_rank", type=int, default=-1, help="local_rank for distributed training on gpus")
 
-parser.add_argument("--model_type", type=str, default = 'pythia')
-parser.add_argument("--model_variant", type=str, default = '2.8B')
+parser.add_argument("--model", type=str, default = 'gpt3')
+parser.add_argument("--atkType", type=str, default = 'suffix')
 
-parser.add_argument("--clean", type=bool, default=True)
+parser.add_argument("--clean", action="store_true", help="Disable the clean action (enabled by default)")
 parser.add_argument("--adv_trainpath", type=str, default=None)
 
 args = parser.parse_args()
@@ -104,11 +104,39 @@ def transfer_fewshot(
         ))
     return fewshot_data
 
-print(f"Loading model and tokenizer {args.model_type, args.model_variant}")
-model_type = args.model_type
-model_variant = args.model_variant
-model, tokenizer = load_model_and_tokenizer(model_type, model_variant)
-print("Loaded model and tokenizer.")
+from openai import OpenAI
+client = OpenAI()
+
+
+def gpt_paraphrase(original_text, prompt=None, paraphrase_model_name=None):
+    assert prompt, "Prompt must be provided for GPT attack"
+
+    paraphrase_query = prompt + original_text
+    query_msg = {"role": "user", "content": paraphrase_query}
+
+#     from tenacity import retry, stop_after_attempt, wait_random_exponential
+
+    # https://github.com/openai/openai-cookbook/blob/main/examples/How_to_handle_rate_limits.ipynb
+#     @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(25))
+    def completion_with_backoff(model, messages):
+        return client.chat.completions.create(
+            model=model, messages=messages
+        )
+
+    outputs = completion_with_backoff(
+        model=paraphrase_model_name,
+        messages=[query_msg]
+    )
+
+    paraphrase_prompt = outputs.choices[0].message.content
+
+    return paraphrase_prompt
+
+if args.model == 'gpt3':
+        model = 'gpt-3.5-turbo'
+elif args.model == 'gpt4':
+        model = 'gpt-4'
+tokenizer = None
 
 # tasks = ["glue-cola", "ag_news", "emo", "glue-sst2", "poem_sentiment"]
 
@@ -146,25 +174,26 @@ print('Few-shot datasests prepared.')
 task = get_task_by_name(tokenizer=tokenizer, task_name=args.task_name)
 task.get_data(train_data, test_data)
 
-
-print("Evaluate ICL performance.")
-icl_predictions = run_icl(model, tokenizer, task, test_datasets, generate_kwargs={"max_new_tokens": args.max_new_tokens})
-icl_acc = calculate_accuracy_on_datasets(task, icl_predictions, test_datasets)
-print(f"ICL Accuracy: {icl_acc:.3f}")
+print(f"Starting paraphrasing...")
+prompt = 'Please paraphrase the following: '
+original_prompt = train_data[0]['input']
+para_prompt = gpt_paraphrase(original_prompt, prompt=prompt, paraphrase_model_name=model)
+print(f"para text:{para_prompt}")
 exit(0)
 
+para_train = copy.deepcopy(train_data)
+n_train = len(train_data)
 
-print("Evaluate task vector Acc.")
-tv_predictions, tv_dev_accuracy_by_layer, task_hiddens = run_task_vector(
-        model,
-        tokenizer,
-        task,
-        test_datasets,
-        dev_datasets,
-)
-tv_acc = calculate_accuracy_on_datasets(task, tv_predictions, test_datasets)
-best_intermediate_layer = int(max(tv_dev_accuracy_by_layer, key=tv_dev_accuracy_by_layer.get))
-    
+for i in range(n_train):
+        original_prompt = train_data[i]['input']
+        para_prompt = gpt_paraphrase(original_text, prompt=prompt, paraphrase_model_name=model)
+        para_train[i]['input'] = para_prompt
 
-print(f"Task Vector Accuracy: {tv_acc:.3f}")
-print(f"Best layer: {best_intermediate_layer:d}")
+print(f"Saving datasets..")
+savedir = '/home/pengfei/Documents/icl_task_vectors/para_data/'+model
+if not os.path.exists(savedir):
+    os.makedirs(savedir)
+filename = args.task_name+'_'+args.atkType
+with open(os.path.join(savedir, filename), 'w') as file:
+    json.dump(para_train, file)
+print(f"Poisoned datasets saved.")

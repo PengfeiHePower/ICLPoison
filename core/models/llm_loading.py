@@ -134,25 +134,25 @@ MODEL_PATHS = {
     "pythia": {
         "1.4B": "EleutherAI/pythia-1.4b",
         "2.8B": "/data1/pengfei/pythia-2.8b",
-        "6.9B": "/data1/pengfei/pythia-6.9b",
+        "6.9B": "/bucket/YamadaU/pengfei/model/pythia-6.9b",
         "12B": "EleutherAI/pythia-12b",
     },
     "llama": {
-        "7B": "/data1/pengfei/Llama-2-7b-hf", #llama_local_path("huggingface", "7B"),
+        "7B": "/bucket/YamadaU/pengfei/model/Llama-2-7b-hf", #llama_local_path("huggingface", "7B"),
         "13B": "/data1/pengfei/Llama-2-13b-hf", #llama_local_path("huggingface", "13B"),
         "30B": llama_local_path("huggingface", "30B"),
         "65B": llama_local_path("huggingface", "65B"),
         "70B": llama_local_path("huggingface", "70B"),
     },
     "falcon": {
-        "7B": "/data1/pengfei/falcon-7b",
+        "7B": "/bucket/YamadaU/pengfei/model/falcon-7b",
         "40B": "tiiuae/falcon-40b",
     },
     "vicuna":{
         "7B": "/data1/pengfei/vicuna-7b-v1.5"
     },
     "gpt-j": {
-        "6B": "/data1/pengfei/gpt-j-6b",
+        "6B": "/bucket/YamadaU/pengfei/model/gpt-j-6b",
     },
     "gpt-2": {
         "0.35B": "gpt2-medium",
@@ -160,7 +160,7 @@ MODEL_PATHS = {
         "1.5B": "gpt2-xl",
     },
     "mpt": {
-        "7B": "/data1/pengfei/mpt-7b",
+        "7B": "/bucket/YamadaU/pengfei/model/mpt-7b",
     },
     "gpt-neox": {
         "20B": "/data1/pengfei/gpt-neox-20b",
