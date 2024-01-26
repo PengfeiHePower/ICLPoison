@@ -21,7 +21,7 @@ class PerplexityFilter:
     """
     def __init__(self, model, tokenizer, threshold, window_size=10):
         self.tokenizer = tokenizer
-        self.model = model.cuda()
+        self.model = model
         self.threshold = threshold
         self.window_threshold = threshold
         self.window_size = window_size

@@ -73,7 +73,7 @@ parser.add_argument("--local_rank", type=int, default=-1, help="local_rank for d
 
 parser.add_argument("--model", type=str, default = 'gpt3')
 
-parser.add_argument("--clean", type=bool, default=True)
+parser.add_argument('--clean', action='store_true', help='If set, clean will be True')
 parser.add_argument("--adv_trainpath", type=str, default=None)
 
 args = parser.parse_args()

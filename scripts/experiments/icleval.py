@@ -152,49 +152,47 @@ icl_predictions = run_icl(model, tokenizer, task, test_datasets, generate_kwargs
 icl_acc = calculate_accuracy_on_datasets(task, icl_predictions, test_datasets)
 print(f"ICL Accuracy: {icl_acc:.3f}")
 
-exit(0)
-
-print("Evaluate task vector Acc.")
-tv_predictions, tv_dev_accuracy_by_layer, task_hiddens = run_task_vector(
-        model,
-        tokenizer,
-        task,
-        test_datasets,
-        dev_datasets,
-)
-tv_acc = calculate_accuracy_on_datasets(task, tv_predictions, test_datasets)
-best_intermediate_layer = int(max(tv_dev_accuracy_by_layer, key=tv_dev_accuracy_by_layer.get))
+# print("Evaluate task vector Acc.")
+# tv_predictions, tv_dev_accuracy_by_layer, task_hiddens = run_task_vector(
+#         model,
+#         tokenizer,
+#         task,
+#         test_datasets,
+#         dev_datasets,
+# )
+# tv_acc = calculate_accuracy_on_datasets(task, tv_predictions, test_datasets)
+# best_intermediate_layer = int(max(tv_dev_accuracy_by_layer, key=tv_dev_accuracy_by_layer.get))
     
-tv_predictions_noise1, tv_dev_accuracy_by_layer, task_hiddens = run_task_vector_noise1(###add noise
-        model,
-        tokenizer,
-        task,
-        test_datasets,
-        dev_datasets,
-)
-tv_acc_noise1 = calculate_accuracy_on_datasets(task,  tv_predictions_noise1, test_datasets)
+# tv_predictions_noise1, tv_dev_accuracy_by_layer, task_hiddens = run_task_vector_noise1(###add noise
+#         model,
+#         tokenizer,
+#         task,
+#         test_datasets,
+#         dev_datasets,
+# )
+# tv_acc_noise1 = calculate_accuracy_on_datasets(task,  tv_predictions_noise1, test_datasets)
     
-tv_predictions_noise2, tv_dev_accuracy_by_layer, task_hiddens = run_task_vector_noise2(###add noise
-        model,
-        tokenizer,
-        task,
-        test_datasets,
-        dev_datasets,
-)
-tv_acc_noise2 = calculate_accuracy_on_datasets(task,  tv_predictions_noise2, test_datasets)
+# tv_predictions_noise2, tv_dev_accuracy_by_layer, task_hiddens = run_task_vector_noise2(###add noise
+#         model,
+#         tokenizer,
+#         task,
+#         test_datasets,
+#         dev_datasets,
+# )
+# tv_acc_noise2 = calculate_accuracy_on_datasets(task,  tv_predictions_noise2, test_datasets)
     
-tv_predictions_noise3, tv_dev_accuracy_by_layer, task_hiddens = run_task_vector_noise3(###add noise
-        model,
-        tokenizer,
-        task,
-        test_datasets,
-        dev_datasets,
-)
-tv_acc_noise3 = calculate_accuracy_on_datasets(task,  tv_predictions_noise3, test_datasets)
+# tv_predictions_noise3, tv_dev_accuracy_by_layer, task_hiddens = run_task_vector_noise3(###add noise
+#         model,
+#         tokenizer,
+#         task,
+#         test_datasets,
+#         dev_datasets,
+# )
+# tv_acc_noise3 = calculate_accuracy_on_datasets(task,  tv_predictions_noise3, test_datasets)
     
 
-print(f"Task Vector Accuracy: {tv_acc:.3f}")
-print(f"Best layer: {best_intermediate_layer:d}")
-print(f"Task Vector Accuracy with Noise 1: {tv_acc_noise1:.3f}")
-print(f"Task Vector Accuracy with Noise 2: {tv_acc_noise2:.3f}")
-print(f"Task Vector Accuracy with Noise 3: {tv_acc_noise3:.3f}")
+# print(f"Task Vector Accuracy: {tv_acc:.3f}")
+# print(f"Best layer: {best_intermediate_layer:d}")
+# print(f"Task Vector Accuracy with Noise 1: {tv_acc_noise1:.3f}")
+# print(f"Task Vector Accuracy with Noise 2: {tv_acc_noise2:.3f}")
+# print(f"Task Vector Accuracy with Noise 3: {tv_acc_noise3:.3f}")
