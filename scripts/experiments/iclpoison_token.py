@@ -236,7 +236,7 @@ print('Poisoning...')
 example_dummy = dev_data[0]
 adv_train_data = []
 train_n = len(train_data)
-poison_id = random.sample(list(range(train_n)), 10)
+poison_id = list(range(train_n))
 for i in poison_id:
     print(f"Sample:{i}")
     #Stage 1:compute token influence score  

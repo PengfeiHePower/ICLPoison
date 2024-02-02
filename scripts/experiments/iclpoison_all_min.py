@@ -160,7 +160,7 @@ print("Start poisoning...")
 adv_train_data_all = []
 example_dummy = dev_data[0]
 train_n = len(train_data)
-poison_id = random.sample(list(range(train_n)), 10) #randomly select poisoned samples
+poison_id = list(range(train_n))
 for i in poison_id:
     print(f"Sample:{i}")
     #train_n
