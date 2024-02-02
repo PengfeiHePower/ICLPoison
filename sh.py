@@ -338,6 +338,31 @@ python -u scripts/experiments/icleval_per.py --task_name glue-sst2 --dataset glu
 python -u scripts/experiments/icleval_per.py --task_name emo --dataset emo --model_type mpt --model_variant 7B --adv_trainpath /home/pengfei/Documents/icl_task_vectors/poi_char/emo/llama7B+_B5 > logs/icl_per/char_emo_mpt7B.log 2>&1
 python -u scripts/experiments/icleval_per.py --task_name poem_sentiment --dataset poem_sentiment --model_type mpt --model_variant 7B --adv_trainpath /home/pengfei/Documents/icl_task_vectors/poi_char/poem_sentiment/llama7B+_B5 > logs/icl_per/char_poem_mpt7B.log 2>&1
 python -u scripts/experiments/icleval_per.py --task_name ag_news --dataset ag_news --model_type mpt --model_variant 7B --adv_trainpath /home/pengfei/Documents/icl_task_vectors/poi_char/ag_news/llama7B+_B5 > logs/icl_per/char_ag_mpt7B.log 2>&1
+### gpt-j-6B
+#### clean
+python -u scripts/experiments/icleval_per.py --task_name glue-cola --dataset glue-cola --model_type gpt-j --model_variant 6B --clean > logs/icl_per/clean_cola_mgpt-j6B.log 2>&1
+python -u scripts/experiments/icleval_per.py --task_name glue-sst2 --dataset glue-sst2 --model_type gpt-j --model_variant 6B --clean > logs/icl_per/clean_sst2_gpt-j6B.log 2>&1
+python -u scripts/experiments/icleval_per.py --task_name emo --dataset emo --model_type gpt-j --model_variant 6B --clean > logs/icl_per/clean_emo_gpt-j6B.log 2>&1
+python -u scripts/experiments/icleval_per.py --task_name poem_sentiment --dataset poem_sentiment --model_type gpt-j --clean --model_variant 6B > logs/icl_per/clean_poem_gpt-j6B.log 2>&1
+python -u scripts/experiments/icleval_per.py --task_name ag_news --dataset ag_news --model_type gpt-j --model_variant 6B --clean > logs/icl_per/clean_ag_gpt-j6B.log 2>&1
+#### adv suffix
+python -u scripts/experiments/icleval_per.py --task_name glue-cola --dataset glue-cola --model_type gpt-j --model_variant 6B --adv_trainpath /home/pengfei/Documents/icl_task_vectors/poi_suffix_min/glue-cola/llama7B_all > logs/icl_per/adv_cola_gpt-j6B.log 2>&1
+python -u scripts/experiments/icleval_per.py --task_name glue-sst2 --dataset glue-sst2 --model_type gpt-j --model_variant 6B --adv_trainpath /home/pengfei/Documents/icl_task_vectors/poi_suffix_min/glue-sst2/llama7B_all > logs/icl_per/adv_sst2_gpt-j6B.log 2>&1
+python -u scripts/experiments/icleval_per.py --task_name emo --dataset emo --model_type gpt-j --model_variant 6B --adv_trainpath /home/pengfei/Documents/icl_task_vectors/poi_suffix_min/emo/llama7B_all > logs/icl_per/adv_emo_gpt-j6B.log 2>&1
+python -u scripts/experiments/icleval_per.py --task_name poem_sentiment --dataset poem_sentiment --model_type gpt-j --model_variant 6B --adv_trainpath /home/pengfei/Documents/icl_task_vectors/poi_suffix_min/poem_sentiment/llama7B_all > logs/icl_per/adv_poem_gpt-j6B.log 2>&1
+python -u scripts/experiments/icleval_per.py --task_name ag_news --dataset ag_news --model_type gpt-j --model_variant 6B --adv_trainpath /home/pengfei/Documents/icl_task_vectors/poi_suffix_min/ag_news/llama7B_all  > logs/icl_per/adv_ag_gpt-j6B.log 2>&1
+#### word sub
+python -u scripts/experiments/icleval_per.py --task_name glue-cola --dataset glue-cola --model_type gpt-j --model_variant 6B --adv_trainpath /home/pengfei/Documents/icl_task_vectors/poi_word_min/glue-cola/llama7B+_B3 > logs/icl_per/word_cola_gpt-j6B.log 2>&1
+python -u scripts/experiments/icleval_per.py --task_name glue-sst2 --dataset glue-sst2 --model_type gpt-j --model_variant 6B --adv_trainpath /home/pengfei/Documents/icl_task_vectors/poi_word_min/glue-sst2/llama7B+_B3 > logs/icl_per/word_sst2_gpt-j6B.log 2>&1
+python -u scripts/experiments/icleval_per.py --task_name glue-sst2 --dataset emo --model_type gpt-j --model_variant 6B --adv_trainpath /home/pengfei/Documents/icl_task_vectors/poi_word_min/emo/llama7B+_B3 > logs/icl_per/word_emo_gpt-j6B.log 2>&1
+python -u scripts/experiments/icleval_per.py --task_name poem_sentiment --dataset poem_sentiment --model_type gpt-j --model_variant 6B --adv_trainpath /home/pengfei/Documents/icl_task_vectors/poi_word_min/poem_sentiment/llama7B+_B3 > logs/icl_per/word_poem_gpt-j6B.log 2>&1
+python -u scripts/experiments/icleval_per.py --task_name ag_news --dataset ag_news --model_type gpt-j --model_variant 6B --adv_trainpath /home/pengfei/Documents/icl_task_vectors/poi_word_min/ag_news/llama7B+_B3  > logs/icl_per/word_ag_gpt-j6B.log 2>&1
+#### char sub
+python -u scripts/experiments/icleval_per.py --task_name glue-cola --dataset glue-cola --model_type gpt-j --model_variant 6B --adv_trainpath /home/pengfei/Documents/icl_task_vectors/poi_char/glue-cola/llama7B+_B5 > logs/icl_per/char_cola_gpt-j6B.log 2>&1
+python -u scripts/experiments/icleval_per.py --task_name glue-sst2 --dataset glue-sst2 --model_type gpt-j --model_variant 6B --adv_trainpath /home/pengfei/Documents/icl_task_vectors/poi_char/glue-sst2/llama7B+_B5 > logs/icl_per/char_sst2_gpt-j6B.log 2>&1
+python -u scripts/experiments/icleval_per.py --task_name emo --dataset emo --model_type gpt-j --model_variant 6B --adv_trainpath /home/pengfei/Documents/icl_task_vectors/poi_char/emo/llama7B+_B5 > logs/icl_per/char_emo_gpt-j6B.log 2>&1
+python -u scripts/experiments/icleval_per.py --task_name poem_sentiment --dataset poem_sentiment --model_type gpt-j --model_variant 6B --adv_trainpath /home/pengfei/Documents/icl_task_vectors/poi_char/poem_sentiment/llama7B+_B5 > logs/icl_per/char_poem_gpt-j6B.log 2>&1
+python -u scripts/experiments/icleval_per.py --task_name ag_news --dataset ag_news --model_type gpt-j --model_variant 6B --adv_trainpath /home/pengfei/Documents/icl_task_vectors/poi_char/ag_news/llama7B+_B5 > logs/icl_per/char_ag_gpt-j6B.log 2>&1
 
 
 
@@ -476,7 +501,7 @@ python -u scripts/experiments/icleval_gpt.py --task_name glue-cola --dataset glu
 python -u scripts/experiments/icleval_gpt.py --task_name glue-sst2 --dataset glue-sst2 --model gpt4 > logs/cleanEval/sst2_gpt4.log 2>&1
 python -u scripts/experiments/icleval_gpt.py --task_name emo --dataset emo --model gpt4 > logs/cleanEval/emo_gpt4.log 2>&1
 python -u scripts/experiments/icleval_gpt.py --task_name poem_sentiment --dataset poem_sentiment --model gpt4 > logs/cleanEval/poem_gpt4.log 2>&1
-python -u scripts/experiments/icleval_gpt.py --task_name ag_news--dataset ag_news --model gpt4 > logs/cleanEval/ag_gpt4.log 2>&1
+python -u scripts/experiments/icleval_gpt.py --task_name ag_news --dataset ag_news --model gpt4 > logs/cleanEval/ag_gpt4.log 2>&1
 #### random flip
 python -u scripts/experiments/iclpoison_flip_gpt.py --task_name glue-cola --dataset glue-cola --model gpt4 > logs/iclflip/cola_gpt4.log 2>&1
 python -u scripts/experiments/iclpoison_flip_gpt.py --task_name glue-sst2 --dataset glue-sst2 --model gpt4 > logs/iclflip/sst2_gpt4.log 2>&1

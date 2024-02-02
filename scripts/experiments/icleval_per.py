@@ -143,6 +143,14 @@ train_text = [d['input'] for d in train_data]
 print('Dataset loaded.')
 
 ppl = PerplexityFilter(model, tokenizer, threshold=100)
-avg_perplexity = ppl.get_avg_win_log_ppl_of_goals(train_text)
-
+all_perplexity, avg_perplexity = ppl.get_avg_win_log_ppl_of_goals(train_text)
 print(f"Average perplexity: {avg_perplexity}")
+
+num_runs = 100
+boot_perplexity = []
+for i in range(num_runs):
+    samples = np.random.choice(all_perplexity,size=5, replace=False)
+    boot_perplexity.append(np.mean(samples))
+confidence_interval = np.percentile(boot_perplexity, [2.5, 97.5])
+print(f"Confidence Interval:{confidence_interval}")
+print(confidence_interval[1]-np.mean(confidence_interval))

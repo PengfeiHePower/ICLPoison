@@ -92,7 +92,7 @@ class PerplexityFilter:
                 loss = self.model(input_ids, labels=input_ids).loss
             all_loss.append(loss.item())
         
-        return sum(all_loss)/len(all_loss)
+        return all_loss, sum(all_loss)/len(all_loss)
     
     def get_log_prob(self, sequence):
         """

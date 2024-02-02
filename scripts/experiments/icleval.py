@@ -60,7 +60,7 @@ parser.add_argument("--log_dir", default='clean_eval_icl/logs', type=str)
 parser.add_argument("--dataset", type=str, default='glue-cola')
 # parser.add_argument("--tasktype", type=str, default=None)
 parser.add_argument("--num_exm", type=int, default=4)
-parser.add_argument("--data_dir", type=str, default="/home/p/p-he/data")
+parser.add_argument("--data_dir", type=str, default="/data1/pengfei/data/")
 parser.add_argument("--k", type=int, default=16384)
 parser.add_argument("--seed", type=int, default=100)
 
@@ -74,7 +74,7 @@ parser.add_argument("--local_rank", type=int, default=-1, help="local_rank for d
 parser.add_argument("--model_type", type=str, default = 'pythia')
 parser.add_argument("--model_variant", type=str, default = '2.8B')
 
-parser.add_argument("--clean", type=bool, default=True)
+parser.add_argument('--clean', action='store_true', help='If set, clean will be True')
 parser.add_argument("--adv_trainpath", type=str, default=None)
 
 parser.add_argument("--format", type=int, default=1)

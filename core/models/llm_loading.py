@@ -138,7 +138,7 @@ MODEL_PATHS = {
         "12B": "EleutherAI/pythia-12b",
     },
     "llama": {
-        "7B": "/bucket/YamadaU/pengfei/model/Llama-2-7b-hf", #llama_local_path("huggingface", "7B"),
+        "7B": "/data1/pengfei/Llama-2-7b-hf", #llama_local_path("huggingface", "7B"),
         "13B": "/data1/pengfei/Llama-2-13b-hf", #llama_local_path("huggingface", "13B"),
         "30B": llama_local_path("huggingface", "30B"),
         "65B": llama_local_path("huggingface", "65B"),
@@ -152,7 +152,7 @@ MODEL_PATHS = {
         "7B": "/data1/pengfei/vicuna-7b-v1.5"
     },
     "gpt-j": {
-        "6B": "/bucket/YamadaU/pengfei/model/gpt-j-6b",
+        "6B": "/data1/pengfei/gpt-j-6b",
     },
     "gpt-2": {
         "0.35B": "gpt2-medium",
