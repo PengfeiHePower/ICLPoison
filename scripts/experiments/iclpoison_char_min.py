@@ -78,7 +78,7 @@ parser.add_argument("--local_rank", type=int, default=-1, help="local_rank for d
 parser.add_argument("--model_type", type=str, default = 'llama')
 parser.add_argument("--model_variant", type=str, default = '7B')
 
-parser.add_argument("--budget", type=int, default=5, help='number of replaced tokens')
+parser.add_argument("--budget", type=int, default=8, help='number of replaced tokens')
 
 args = parser.parse_args()
 print('args:', args)

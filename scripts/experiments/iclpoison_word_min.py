@@ -81,7 +81,7 @@ parser.add_argument("--local_rank", type=int, default=-1, help="local_rank for d
 parser.add_argument("--model_type", type=str, default = 'llama')
 parser.add_argument("--model_variant", type=str, default = '7B')
 
-parser.add_argument("--budget", type=int, default=3, help='number of replaced tokens')
+parser.add_argument("--budget", type=int, default=5, help='number of replaced tokens')
 parser.add_argument("--num_cand", type=int, default=50, help='number of candidates to check')
 
 args = parser.parse_args()
@@ -213,19 +213,7 @@ with open(GLOVE_PATH, 'r', encoding='utf-8') as file:
         vector = np.array(values[1:], dtype=np.float32)
         if vector.shape[0] == 300:
                 glove_model[word] = vector
-        # glove_model[word] = vector
-# f = open(GLOVE_PATH,'r')
-# for line in f:
-#     row = line.strip().split(' ')
-#     word = row[0]
-#     #print(word)
-#     embedding = np.array([float(val) for val in row[1:]])
-#     glove_model[word] = embedding
 print(f"GLOVE embeddings loaded.")
-# print(f"len of glove_model:{len(glove_model)}")
-# print(f"embedding:{glove_model['frog']}")
-# print(f"embedding shape:{glove_model['frog'].shape}")
-# input(111)
 
 
 print(f"Loading model and tokenizer {args.model_type, args.model_variant}")
@@ -234,11 +222,7 @@ model_variant = args.model_variant
 model, tokenizer = load_model_and_tokenizer(model_type, model_variant)
 print("Model and tokenizer loaded.")
 
-# tasks = ["glue-cola", "ag_news", "emo", "glue-sst2", "poem_sentiment"]
-
-# for task_name in tasks:
 print(f"Evalauet on task: {args.task_name}")
-# dataset = task_name
 #load data
 train_data = load_data(split = "train", k = args.k, seed = args.seed, 
                         datasets = None if args.dataset is None else args.task_name.split(","), 
@@ -256,7 +240,6 @@ print('Dataset loaded.')
 
 test_datasets = transfer_fewshot(train_data, test_data, 1)
 dev_datasets = transfer_fewshot(train_data, dev_data, 1)
-#task.create_datasets(num_datasets=num_test_datasets, num_examples=num_examples)
 print('Few-shot datasests prepared.')
 
 task = get_task_by_name(tokenizer=tokenizer, task_name=args.task_name)
@@ -284,10 +267,7 @@ for i in poison_id:
     tv_o_normal = normalized_tv(model, tokenizer,task,fewshot_datas).squeeze(0)
     
     importance_score = evaluate_importance(fewshot_datas, model, tokenizer, tv_o_normal)
-    # # print(f"importance_score:{importance_score}")
-    # # input(111)
     word_to_perturb = top_k_indices(importance_score, args.budget)
-    # word_to_perturb = [1,2]
     
     #Stage 2: replace these words with nearby words
     original_word = word_tokenize(fewshot_datas[0].train_inputs) #list size [word_num]
@@ -306,15 +286,11 @@ for i in poison_id:
             perturb_data = copy.deepcopy(fewshot_datas) #FewShot object
             perturb_word[idx] = cand
             perturb_text = recombine_tokens(perturb_word) #string
-            # print(f"perturb_text:{perturb_text}")
             perturb_data[0].train_inputs = perturb_text
             perturbed_tv_normal = normalized_tv(model, tokenizer, task, perturb_data)
-            # print(f"perturbed_tv_normal:{perturbed_tv_normal}")
-            # print(f"perturbed_tv_normal shape:{perturbed_tv_normal.shape}")
             change = diff_l2(tv_o_normal.squeeze(0), perturbed_tv_normal.squeeze(0))
             print(f"change:{change}")
             tv_changes.append((cand, change.item()))
-            # input(111)
         #sort the changes in descending order
         sorted_changes = sorted(tv_changes, key=lambda x: x[1], reverse=True)
         selected_word = sorted_changes[0][0]
