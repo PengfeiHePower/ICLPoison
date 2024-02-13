@@ -1,1 +1,0 @@
-[{"task": "poem_sentiment", "input": "augmented frog sweet, a hundred fold", "output": "positive", "options": ["negative", "no_impact", "positive"]}]
