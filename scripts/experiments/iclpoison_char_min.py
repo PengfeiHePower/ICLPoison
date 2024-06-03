@@ -23,6 +23,7 @@ import time
 import copy
 from datetime import datetime
 from typing import Any, List, Optional, Iterable
+import time
 
 from typing import Optional
 
@@ -219,9 +220,10 @@ print('Poisoning...')
 example_dummy = dev_data[0]
 adv_train_data = []
 train_n = len(train_data)
-poison_id = list(range(train_n))
+poison_id = list(range(10))
 for i in poison_id:
     print(f"Sample:{i}")
+    start_time = time.time()
     #Stage 1:compute character influence score
     example_tr = train_data[i]
     fewshot_datas = [FewShotDataset(
@@ -267,6 +269,9 @@ for i in poison_id:
     #decode the perturbed token sequences
     perturbed_text = recombine_tokens(original_char)
     print(f"perturbed_text:{perturbed_text}")
+    end_time = time.time()
+    print(f"running time:{end_time-start_time}")
+    exit(0)
     example_tr['input'] = perturbed_text
     adv_train_data.append(example_tr)
 

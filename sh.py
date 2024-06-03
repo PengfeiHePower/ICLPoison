@@ -10,14 +10,14 @@ python -u scripts/experiments/icleval.py --task_name ag_news --dataset ag_news -
 python -u scripts/experiments/icleval.py --task_name glue-cola --dataset glue-cola --model_type pythia --model_variant 6.9B > logs/cleanEval/cola_pythia6.9B.log 2>&1
 python -u scripts/experiments/icleval.py --task_name emo --dataset emo --model_type pythia --model_variant 6.9B > logs/cleanEval/emo_pythia6.9B.log 2>&1
 python -u scripts/experiments/icleval.py --task_name glue-sst2 --dataset glue-sst2 --model_type pythia --model_variant 6.9B > logs/cleanEval/sst2_pythia6.9B.log 2>&1
-python -u scripts/experiments/icleval.py --task_name poem_sentiment --dataset poem_sentiment --model_type pythia --model_variant 6.9B > logs/cleanEval/poem_pythia6.9B.log 2>&1
+python -u scripts/experiments/icleval.py --task_name poem_sentiment --dataset poem_sentiment --model_type pythia --model_variant 6.9B --clean > logs/cleanEval/poem_pythia6.9B.log 2>&1
 python -u scripts/experiments/icleval.py --task_name ag_news --dataset ag_news --model_type pythia --model_variant 6.9B > logs/cleanEval/ag_pythia6.9B.log 2>&1
 ### llama2-7B
-python -u scripts/experiments/icleval.py --task_name glue-cola --dataset glue-cola --model_type llama --model_variant 7B > logs/cleanEval/cola_llama7B.log 2>&1
-python -u scripts/experiments/icleval.py --task_name emo --dataset emo --model_type llama --model_variant 7B > logs/cleanEval/emo_llama7B.log 2>&1
-python -u scripts/experiments/icleval.py --task_name glue-sst2 --dataset glue-sst2 --model_type llama --model_variant 7B > logs/cleanEval/sst2_llama7B.log 2>&1
-python -u scripts/experiments/icleval.py --task_name poem_sentiment --dataset poem_sentiment --model_type llama --model_variant 7B > logs/cleanEval/poem_llama7B.log 2>&1
-python -u scripts/experiments/icleval.py --task_name ag_news --dataset ag_news --model_type llama --model_variant 7B > logs/cleanEval/ag_llama7B.log 2>&1
+python -u scripts/experiments/icleval.py --task_name glue-cola --dataset glue-cola --model_type llama --model_variant 7B --clean > logs/cleanEval/cola_llama7B_after.log 2>&1
+python -u scripts/experiments/icleval.py --task_name emo --dataset emo --model_type llama --model_variant 7B --clean > logs/cleanEval/emo_llama7B_after.log 2>&1
+python -u scripts/experiments/icleval.py --task_name glue-sst2 --dataset glue-sst2 --model_type llama --model_variant 7B --clean --clean > logs/cleanEval/sst2_llama7B_after.log 2>&1
+python -u scripts/experiments/icleval.py --task_name poem_sentiment --dataset poem_sentiment --model_type llama --model_variant 7B --clean > logs/cleanEval/poem_llama7B_after.log 2>&1
+python -u scripts/experiments/icleval.py --task_name ag_news --dataset ag_news --model_type llama --model_variant 7B --clean > logs/cleanEval/ag_llama7B_after.log 2>&1
 ### llama2-13B
 python -u scripts/experiments/icleval.py --task_name glue-cola --dataset glue-cola --model_type llama --model_variant 13B > logs/cleanEval/cola_llama13B.log 2>&1
 python -u scripts/experiments/icleval.py --task_name emo --dataset emo --model_type llama --model_variant 13B > logs/cleanEval/emo_llama13B.log 2>&1
@@ -155,6 +155,8 @@ python -u scripts/experiments/iclpoison_word_min.py --task_name glue-cola --data
 python -u scripts/experiments/iclpoison_word_min.py --task_name glue-sst2 --dataset glue-sst2 --model_type llama --model_variant 7B --budget 3 --num_cand 100 > logs/iclpoison_word_min/sst2_b3_llama7B.log 2>&1
 python -u scripts/experiments/iclpoison_word_min.py --task_name emo --dataset emo --model_type llama --model_variant 7B --budget 3 --num_cand 100 > logs/iclpoison_word_min/emo_b3_llama7B.log 2>&1
 python -u scripts/experiments/iclpoison_word_min.py --task_name  ag_news --dataset ag_news --model_type llama --model_variant 7B --budget 3 --num_cand 100 > logs/iclpoison_word_min/ag_b3_llama7B.log 2>&1
+
+python -u scripts/experiments/iclpoison_word_min.py --task_name emo --dataset emo --model_type pythia --model_variant 6.9B --budget 3 --num_cand 100 > logs/iclpoison_word_min/emo_b3_pythia69B.log 2>&1
 
 
 #poison with char change
@@ -566,3 +568,28 @@ python -u scripts/experiments/icleval.py --task_name glue-cola --dataset glue-co
 python -u scripts/experiments/icleval.py --task_name glue-cola --dataset glue-cola --model_type pythia --model_variant 2.8B --clean False --adv_trainpath /home/pengfei/Documents/icl_task_vectors/adv_train/glue-cola/pythia2.8B_best  > logs/poisonEval/best_cola_pythia2.8B.log 2>&1
 python -u scripts/experiments/icleval.py --task_name glue-sst2 --dataset glue-sst2 --model_type pythia --model_variant 2.8B --clean False --adv_trainpath /home/pengfei/Documents/icl_task_vectors/adv_train/glue-sst2/pythia2.8B_all  > logs/poisonEval/all_sst2_pythia2.8B.log 2>&1
 python -u scripts/experiments/icleval.py --task_name glue-sst2 --dataset glue-sst2 --model_type pythia --model_variant 2.8B --clean False --adv_trainpath /home/pengfei/Documents/icl_task_vectors/adv_train/glue-sst2/pythia2.8B_best  > logs/poisonEval/best_sst2_pythia2.8B.log 2>&1
+
+
+# budget analysis on llama2-7B, SST2, with budget from 1-5
+### token
+python -u scripts/experiments/iclpoison_all_min.py --task_name glue-sst2 --dataset glue-sst2 --model_type llama --model_variant 7B > logs/iclpoison_token/sst2_b1_llama7B.log 2>&1
+
+### word
+python -u scripts/experiments/iclpoison_word_min.py --task_name glue-sst2 --dataset glue-sst2 --model_type llama --model_variant 7B --budget 1 --num_cand 100 > logs/iclpoison_word_min/sst2_b1_llama7B.log 2>&1
+python -u scripts/experiments/iclpoison_word_min.py --task_name glue-sst2 --dataset glue-sst2 --model_type llama --model_variant 7B --budget 2 --num_cand 100 > logs/iclpoison_word_min/sst2_b2_llama7B.log 2>&1
+python -u scripts/experiments/iclpoison_word_min.py --task_name glue-sst2 --dataset glue-sst2 --model_type llama --model_variant 7B --budget 3 --num_cand 100 > logs/iclpoison_word_min/sst2_b3_llama7B.log 2>&1
+python -u scripts/experiments/iclpoison_word_min.py --task_name glue-sst2 --dataset glue-sst2 --model_type llama --model_variant 7B --budget 4 --num_cand 100 > logs/iclpoison_word_min/sst2_b4_llama7B.log 2>&1
+
+### char
+python -u scripts/experiments/iclpoison_char_min.py --task_name glue-sst2 --dataset glue-sst2 --model_type llama --model_variant 7B --budget 1 > logs/iclpoison_char_min/sst2_b1_llama7B.log 2>&1
+python -u scripts/experiments/iclpoison_char_min.py --task_name glue-sst2 --dataset glue-sst2 --model_type llama --model_variant 7B --budget 2 > logs/iclpoison_char_min/sst2_b2_llama7B.log 2>&1
+python -u scripts/experiments/iclpoison_char_min.py --task_name glue-sst2 --dataset glue-sst2 --model_type llama --model_variant 7B --budget 3 > logs/iclpoison_char_min/sst2_b3_llama7B.log 2>&1
+python -u scripts/experiments/iclpoison_char_min.py --task_name glue-sst2 --dataset glue-sst2 --model_type llama --model_variant 7B --budget 4 > logs/iclpoison_char_min/sst2_b4_llama7B.log 2>&1
+
+
+### transfer datasets
+python -u scripts/experiments/icleval2.py --task_name glue-cola --te_dataset glue-cola --model_type llama --model_variant 7B --clean > logs/cleanEval/cola_llama7B_transfer.log 2>&1
+python -u scripts/experiments/icleval2.py --task_name emo --te_dataset emo --model_type llama --model_variant 7B --clean > logs/cleanEval/emo_llama7B_transfer.log 2>&1
+python -u scripts/experiments/icleval2.py --task_name glue-sst2 --dataset glue-sst2 --model_type llama --model_variant 7B --clean --clean > logs/cleanEval/sst2_llama7B_transfer.log 2>&1
+python -u scripts/experiments/icleval2.py --task_name poem_sentiment --te_dataset poem_sentiment --model_type llama --model_variant 7B --clean > logs/cleanEval/poem_llama7B_transfer.log 2>&1
+python -u scripts/experiments/icleval2.py --task_name ag_news --te_dataset ag_news --model_type llama --model_variant 7B --clean > logs/cleanEval/ag_llama7B_transfer.log 2>&1

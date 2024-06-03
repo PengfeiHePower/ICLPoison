@@ -23,6 +23,7 @@ import time
 import copy
 from datetime import datetime
 from typing import Any, List, Optional, Iterable
+import time
 
 from typing import Optional
 
@@ -82,7 +83,7 @@ parser.add_argument("--model_type", type=str, default = 'llama')
 parser.add_argument("--model_variant", type=str, default = '7B')
 
 parser.add_argument("--budget", type=int, default=5, help='number of replaced tokens')
-parser.add_argument("--num_cand", type=int, default=50, help='number of candidates to check')
+parser.add_argument("--num_cand", type=int, default=1000, help='number of candidates to check')
 
 args = parser.parse_args()
 print('args:', args)
@@ -252,9 +253,10 @@ print('Poisoning...')
 example_dummy = dev_data[0]
 adv_train_data = []
 train_n = len(train_data)
-poison_id = list(range(train_n))
+poison_id = list(range(10))
 for i in poison_id:
     print(f"Sample:{i}")
+    start_time = time.time()
     #Stage 1:compute word influence score
     example_tr = train_data[i]
     fewshot_datas = [FewShotDataset(
@@ -300,6 +302,9 @@ for i in poison_id:
     perturbed_text = recombine_tokens(original_word)
     print(f"perturbed_text:{perturbed_text}")
     example_tr['input'] = perturbed_text
+    end_time = time.time()
+    print(f"running time:{end_time-start_time}")
+    exit(0)
     adv_train_data.append(example_tr)
 
 

@@ -134,7 +134,7 @@ MODEL_PATHS = {
     "pythia": {
         "1.4B": "EleutherAI/pythia-1.4b",
         "2.8B": "/data1/pengfei/pythia-2.8b",
-        "6.9B": "/bucket/YamadaU/pengfei/model/pythia-6.9b",
+        "6.9B": "/data1/pengfei/pythia-6.9b",
         "12B": "EleutherAI/pythia-12b",
     },
     "llama": {

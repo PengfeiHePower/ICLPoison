@@ -21,6 +21,7 @@ import time
 import copy
 from datetime import datetime
 from typing import Any, List, Optional, Iterable
+import time
 
 from typing import Optional
 
@@ -160,9 +161,10 @@ print("Start poisoning...")
 adv_train_data_all = []
 example_dummy = dev_data[0]
 train_n = len(train_data)
-poison_id = list(range(train_n))
+poison_id = list(range(10))
 for i in poison_id:
     print(f"Sample:{i}")
+    start_time = time.time()
     #train_n
     # extract clean latent representation
     example_tr = train_data[i]
@@ -182,9 +184,9 @@ for i in poison_id:
 
     
     # greedy search for adv suffix
-    suffix_id_all = [0]*5
+    suffix_id_all = [0]*1
     loss_all = 0
-    dummy_ids = [0]*5
+    dummy_ids = [0]*1
     t = random.sample(list(range(tokenizer.vocab_size)), 100)
     for j in t:
         print(f"First token:{j}")
@@ -206,99 +208,102 @@ for i in poison_id:
             loss_all=loss_dummy_all
             suffix_id_all[0]=j
         
-    dummy_all_ids = copy.deepcopy(suffix_id_all)
-    t = random.sample(list(range(tokenizer.vocab_size)), 100)
-    for j in t:
-        print(f"Second token:{j}")
-        adv_datas = copy.deepcopy(fewshot_datas)
-        dummy_all_ids[1] = j
-        dummy_all_str = tokenizer.decode(dummy_all_ids)
-        adv_datas[0].train_inputs += dummy_all_str
-        tv_adv = get_task_vector(
-                model,
-                tokenizer,
-                task,
-                adv_datas,)
-        tv_adv_l2 = torch.norm(tv_adv, p=2, dim=2, keepdim=True)
-        tv_adv_normal = tv_adv/tv_adv_l2
-        loss_dummy_all = diff_l2(tv_o_normal.squeeze(0), tv_adv_normal.squeeze(0))
-        # loss_dummy_all = torch.mean(torch.norm(tv_o_normal - tv_adv_normal, dim=2))
-        print(f"loss_dummy_all:{loss_dummy_all}")
-        if loss_dummy_all>loss_all:
-            loss_all=loss_dummy_all
-            suffix_id_all[1]=j
+    # dummy_all_ids = copy.deepcopy(suffix_id_all)
+    # t = random.sample(list(range(tokenizer.vocab_size)), 100)
+    # for j in t:
+    #     print(f"Second token:{j}")
+    #     adv_datas = copy.deepcopy(fewshot_datas)
+    #     dummy_all_ids[1] = j
+    #     dummy_all_str = tokenizer.decode(dummy_all_ids)
+    #     adv_datas[0].train_inputs += dummy_all_str
+    #     tv_adv = get_task_vector(
+    #             model,
+    #             tokenizer,
+    #             task,
+    #             adv_datas,)
+    #     tv_adv_l2 = torch.norm(tv_adv, p=2, dim=2, keepdim=True)
+    #     tv_adv_normal = tv_adv/tv_adv_l2
+    #     loss_dummy_all = diff_l2(tv_o_normal.squeeze(0), tv_adv_normal.squeeze(0))
+    #     # loss_dummy_all = torch.mean(torch.norm(tv_o_normal - tv_adv_normal, dim=2))
+    #     print(f"loss_dummy_all:{loss_dummy_all}")
+    #     if loss_dummy_all>loss_all:
+    #         loss_all=loss_dummy_all
+    #         suffix_id_all[1]=j
     
-    dummy_all_ids = copy.deepcopy(suffix_id_all)
-    t = random.sample(list(range(tokenizer.vocab_size)), 100)
-    for j in t:
-        print(f"Third token:{j}")
-        adv_datas = copy.deepcopy(fewshot_datas)
-        dummy_all_ids[2] = j
-        dummy_all_str = tokenizer.decode(dummy_all_ids)
-        adv_datas[0].train_inputs += dummy_all_str
-        tv_adv = get_task_vector(
-                model,
-                tokenizer,
-                task,
-                adv_datas,)
-        tv_adv_l2 = torch.norm(tv_adv, p=2, dim=2, keepdim=True)
-        tv_adv_normal = tv_adv/tv_adv_l2
-        loss_dummy_all = diff_l2(tv_o_normal.squeeze(0), tv_adv_normal.squeeze(0))
-        # loss_dummy_all = torch.mean(torch.norm(tv_o_normal - tv_adv_normal, dim=2))
-        print(f"loss_dummy_all:{loss_dummy_all}")
-        if loss_dummy_all>loss_all:
-            loss_all=loss_dummy_all
-            suffix_id_all[2]=j
+    # dummy_all_ids = copy.deepcopy(suffix_id_all)
+    # t = random.sample(list(range(tokenizer.vocab_size)), 100)
+    # for j in t:
+    #     print(f"Third token:{j}")
+    #     adv_datas = copy.deepcopy(fewshot_datas)
+    #     dummy_all_ids[2] = j
+    #     dummy_all_str = tokenizer.decode(dummy_all_ids)
+    #     adv_datas[0].train_inputs += dummy_all_str
+    #     tv_adv = get_task_vector(
+    #             model,
+    #             tokenizer,
+    #             task,
+    #             adv_datas,)
+    #     tv_adv_l2 = torch.norm(tv_adv, p=2, dim=2, keepdim=True)
+    #     tv_adv_normal = tv_adv/tv_adv_l2
+    #     loss_dummy_all = diff_l2(tv_o_normal.squeeze(0), tv_adv_normal.squeeze(0))
+    #     # loss_dummy_all = torch.mean(torch.norm(tv_o_normal - tv_adv_normal, dim=2))
+    #     print(f"loss_dummy_all:{loss_dummy_all}")
+    #     if loss_dummy_all>loss_all:
+    #         loss_all=loss_dummy_all
+    #         suffix_id_all[2]=j
     
     
-    dummy_all_ids = copy.deepcopy(suffix_id_all)
-    t = random.sample(list(range(tokenizer.vocab_size)), 100)
-    for j in t:
-        print(f"Forth token:{j}")
-        adv_datas = copy.deepcopy(fewshot_datas)
-        dummy_all_ids[3] = j
-        dummy_all_str = tokenizer.decode(dummy_all_ids)
-        adv_datas[0].train_inputs += dummy_all_str
-        tv_adv = get_task_vector(
-                model,
-                tokenizer,
-                task,
-                adv_datas,)
-        tv_adv_l2 = torch.norm(tv_adv, p=2, dim=2, keepdim=True)
-        tv_adv_normal = tv_adv/tv_adv_l2
-        loss_dummy_all = diff_l2(tv_o_normal.squeeze(0), tv_adv_normal.squeeze(0))
-        # loss_dummy_all = torch.mean(torch.norm(tv_o_normal - tv_adv_normal, dim=2))
-        print(f"loss_dummy_all:{loss_dummy_all}")
-        if loss_dummy_all>loss_all:
-            loss_all=loss_dummy_all
-            suffix_id_all[3]=j
+    # dummy_all_ids = copy.deepcopy(suffix_id_all)
+    # t = random.sample(list(range(tokenizer.vocab_size)), 100)
+    # for j in t:
+    #     print(f"Forth token:{j}")
+    #     adv_datas = copy.deepcopy(fewshot_datas)
+    #     dummy_all_ids[3] = j
+    #     dummy_all_str = tokenizer.decode(dummy_all_ids)
+    #     adv_datas[0].train_inputs += dummy_all_str
+    #     tv_adv = get_task_vector(
+    #             model,
+    #             tokenizer,
+    #             task,
+    #             adv_datas,)
+    #     tv_adv_l2 = torch.norm(tv_adv, p=2, dim=2, keepdim=True)
+    #     tv_adv_normal = tv_adv/tv_adv_l2
+    #     loss_dummy_all = diff_l2(tv_o_normal.squeeze(0), tv_adv_normal.squeeze(0))
+    #     # loss_dummy_all = torch.mean(torch.norm(tv_o_normal - tv_adv_normal, dim=2))
+    #     print(f"loss_dummy_all:{loss_dummy_all}")
+    #     if loss_dummy_all>loss_all:
+    #         loss_all=loss_dummy_all
+    #         suffix_id_all[3]=j
     
-    dummy_all_ids = copy.deepcopy(suffix_id_all)
-    t = random.sample(list(range(tokenizer.vocab_size)), 100)
-    for j in t:
-        print(f"Fifth token:{j}")
-        adv_datas = copy.deepcopy(fewshot_datas)
-        dummy_all_ids[4] = j
-        dummy_all_str = tokenizer.decode(dummy_all_ids)
-        adv_datas[0].train_inputs += dummy_all_str
-        tv_adv = get_task_vector(
-                model,
-                tokenizer,
-                task,
-                adv_datas,)
-        tv_adv_l2 = torch.norm(tv_adv, p=2, dim=2, keepdim=True)
-        tv_adv_normal = tv_adv/tv_adv_l2
-        loss_dummy_all = diff_l2(tv_o_normal.squeeze(0), tv_adv_normal.squeeze(0))
-        # loss_dummy_all = torch.mean(torch.norm(tv_o_normal - tv_adv_normal, dim=2))
-        print(f"loss_dummy_all:{loss_dummy_all}")
-        if loss_dummy_all>loss_all:
-            loss_all=loss_dummy_all
-            suffix_id_all[4]=j
+    # dummy_all_ids = copy.deepcopy(suffix_id_all)
+    # t = random.sample(list(range(tokenizer.vocab_size)), 100)
+    # for j in t:
+    #     print(f"Fifth token:{j}")
+    #     adv_datas = copy.deepcopy(fewshot_datas)
+    #     dummy_all_ids[4] = j
+    #     dummy_all_str = tokenizer.decode(dummy_all_ids)
+    #     adv_datas[0].train_inputs += dummy_all_str
+    #     tv_adv = get_task_vector(
+    #             model,
+    #             tokenizer,
+    #             task,
+    #             adv_datas,)
+    #     tv_adv_l2 = torch.norm(tv_adv, p=2, dim=2, keepdim=True)
+    #     tv_adv_normal = tv_adv/tv_adv_l2
+    #     loss_dummy_all = diff_l2(tv_o_normal.squeeze(0), tv_adv_normal.squeeze(0))
+    #     # loss_dummy_all = torch.mean(torch.norm(tv_o_normal - tv_adv_normal, dim=2))
+    #     print(f"loss_dummy_all:{loss_dummy_all}")
+    #     if loss_dummy_all>loss_all:
+    #         loss_all=loss_dummy_all
+    #         suffix_id_all[4]=j
     
     adv_all_suffix = tokenizer.decode(suffix_id_all)
     example_all = copy.deepcopy(example_tr)
     example_all['input'] += adv_all_suffix
+    end_time = time.time()
+    print(f"running time: {end_time-start_time}")
     adv_train_data_all.append(example_all)
+    exit(0)
 
 print('Saving...')
 savedir = '/home/pengfei/Documents/icl_task_vectors/poi_suffix_min/'+args.task_name
